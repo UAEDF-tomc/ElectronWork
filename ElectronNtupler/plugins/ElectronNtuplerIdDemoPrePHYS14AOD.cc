@@ -165,9 +165,12 @@ ElectronNtuplerIdDemoPrePHYS14AOD::analyze(const edm::Event& iEvent, const edm::
   passTightId_.clear();     
   
   // Loop over electrons
-  const auto& ele_refs = collection->refVector();
+  for (size_t i = 0; i < collection->size(); ++i){
+    const auto el = collection->ptrAt(i);
 
-  for( const auto& el : ele_refs ) {
+  // const auto& ele_refs = collection->refVector();
+
+  // for( const auto& el : ele_refs ) {
     
     // Kinematics
     if( el->pt() < 10 ) 
