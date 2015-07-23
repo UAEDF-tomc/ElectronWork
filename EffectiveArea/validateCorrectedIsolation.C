@@ -18,36 +18,49 @@
 
 #include <vector>
 
-const float ea_neutral_total_iso[5] = {  0.1041,  0.1038,  0.0590,  0.0825,  0.1551};
+//Spring15:
+const float ea_neutral_total_iso[5] = {  0.0973,  0.0954,  0.0632,  0.0727,  0.1337};
+
+// Tests:
+//const float ea_neutral_total_iso[5] = {  0.0655,  0.0674,  0.0319,  0.0551,  0.1149};
+//const float ea_neutral_total_iso[5] = {  0.0828,  0.0821,  0.0563,  0.0640,  0.1138};
+//const float ea_neutral_total_iso[5] = {  0.0735,  0.0745,  0.0494,  0.0552,  0.1102};
+//const float ea_neutral_total_iso[5] = {  0.0566,  0.0611,  0.0406,  0.0507,  0.1017};
+//const float ea_neutral_total_iso[5] = {  0.1251,  0.1335,  0.0892,  0.1338,  0.2195};
+//const float ea_neutral_total_iso[5] = {  0.1682,  0.0954,  0.0632,  0.0727,  0.1337};
+
+// Phys14:
+//const float ea_neutral_total_iso[5] = {  0.1041,  0.1038,  0.0590,  0.0825,  0.1551};
 
 // For this exercise, we use two MC samples: the signal sample
 // and a background-reach sample. Both have the same ntuple structure.
 //
 // Signal sample: DYToLL
-const TString fileNameSignal = 
-  "/home/hep/ikrav/work/ntuples/PHYS14/DYJetsToLL_PU20bx25_event_structure.root";
+const TString fileNameSignal =
+  "/afs/cern.ch/user/r/rkamalie/workspace/public/DY_Spring15_Asympt50ns_24june2015.root";
+//"/home/hep/ikrav/work/ntuples/PHYS14/DYJetsToLL_PU20bx25_event_structure.root";
   // "/home/hep/ikrav/work/ntuples/PHYS14/TTJets_PU20bx25_event_structure.root";
 // Directory and tree name:
 const TString treeName = "ntupler/ElectronTree";
 
 const bool verbose = false;
-const bool smallEventCount = false;
+const bool smallEventCount = true;
 
 const float boundaryBarrelEndcap = 1.479; 
 
 // Selection cuts
 // Kinematics
-const float ptCut = 25; 
+const float ptCut = 20; 
 
 const float isoCut = 0.100;
 
 const int nEtaBins = 5;
 const float etaBinLimits[nEtaBins+1] = {0.0, 0.8, 1.3, 2.0, 2.2, 2.5};
 
-const int nNvtxBins = 11;
+const int nNvtxBins = 15;
 const float nVtxBinLimits[nNvtxBins+1] = {5, 10, 13, 15, 
 					  16, 17, 18, 19, 20, 
-					  22, 25, 30};
+					  22, 25, 30, 35, 40, 45, 50};
 
 //
 // Forward declarations
@@ -134,8 +147,7 @@ void validateCorrectedIsolation(bool forBarrel = true){
   std::vector <float> *isoNeutralHadrons = 0;
   std::vector <float> *isoPhotons = 0;
   std::vector <float> *isoChargedFromPU = 0;
-  std::vector <int> *isTrueElectron = 0;
-  std::vector <int> *isTrueElectronAlternative = 0;
+  std::vector <int> *isTrue = 0;
   // Other vars  
   // Impact parameters
   std::vector <float> *eleD0 = 0;      // r-phi plane impact parameter
@@ -163,8 +175,7 @@ void validateCorrectedIsolation(bool forBarrel = true){
   TBranch *b_isoNeutralHadrons = 0;
   TBranch *b_isoPhotons = 0;
   TBranch *b_isoChargedFromPU = 0;
-  TBranch *b_isTrueElectron;
-  TBranch *b_isTrueElectronAlternative;
+  TBranch *b_isTrue;
   // Other vars
   TBranch *b_eleD0 = 0;
   TBranch *b_eleDZ = 0;
@@ -188,10 +199,7 @@ void validateCorrectedIsolation(bool forBarrel = true){
   treeSignal->SetBranchAddress("isoNeutralHadrons", &isoNeutralHadrons, &b_isoNeutralHadrons);
   treeSignal->SetBranchAddress("isoPhotons",        &isoPhotons,        &b_isoPhotons);
   treeSignal->SetBranchAddress("isoChargedFromPU",  &isoChargedFromPU,  &b_isoChargedFromPU);
-  treeSignal->SetBranchAddress("isTrueElectron",    &isTrueElectron,    &b_isTrueElectron);
-  treeSignal->SetBranchAddress("isTrueElectronAlternative",    
-			       &isTrueElectronAlternative,  
-			       &b_isTrueElectronAlternative);
+  treeSignal->SetBranchAddress("isTrue",    &isTrue,    &b_isTrue);
   treeSignal->SetBranchAddress("d0",                &eleD0,             &b_eleD0);
   treeSignal->SetBranchAddress("dz",                &eleDZ,             &b_eleDZ);
   treeSignal->SetBranchAddress("dEtaIn",            &eleDEtaIn,         &b_eleDEtaIn);
@@ -211,7 +219,7 @@ void validateCorrectedIsolation(bool forBarrel = true){
   //
   UInt_t maxEvents = treeSignal->GetEntries();
   if( smallEventCount )
-    maxEvents = 100000;
+    maxEvents = 1000000;
   if(verbose)
     printf("Start loop over events, total events = %lld\n", 
 	   treeSignal->GetEntries() );
@@ -237,8 +245,7 @@ void validateCorrectedIsolation(bool forBarrel = true){
     b_isoNeutralHadrons->GetEntry(tentry);
     b_isoPhotons->GetEntry(tentry);
     b_isoChargedFromPU->GetEntry(tentry);
-    b_isTrueElectron->GetEntry(tentry);
-    b_isTrueElectronAlternative->GetEntry(tentry);
+    b_isTrue->GetEntry(tentry);
     // Other vars
     b_eleD0->GetEntry(tentry);
     b_eleDZ->GetEntry(tentry);
@@ -301,8 +308,8 @@ void validateCorrectedIsolation(bool forBarrel = true){
       float relIsoWithEA = (isoCh + std::max(0.0, isoNh + isoPh
 					     - rho*ea_neutral_total_iso[ieta]) )/pt;
       // Fill efficiencie related histograms
-      int isTrue = isTrueElectron->at(iele); 
-      if( isTrue == 1 ){
+      int isTrueEle = isTrue->at(iele); 
+      if( isTrueEle == 1 ){
 
 	denomEff->Fill(nPV);
 	
@@ -315,7 +322,7 @@ void validateCorrectedIsolation(bool forBarrel = true){
 	if( relIsoWithEA < isoCut )
 	  numEffEA->Fill(nPV);
 
-      }else if ( isTrue == 0 || isTrue == 3 ){ 
+      }else if ( isTrueEle == 0 || isTrueEle == 3 ){ 
 
 	denomFake->Fill(nPV);
 	

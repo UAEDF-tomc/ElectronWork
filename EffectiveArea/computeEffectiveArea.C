@@ -34,35 +34,37 @@ const TString eaTypeString[4] = {
 //
 // Signal sample: DYToLL
 const TString fileNameSignal = 
-  "/home/hep/ikrav/work/ntuples/PHYS14/DYJetsToLL_PU20bx25_event_structure.root";
+  "/afs/cern.ch/user/r/rkamalie/workspace/public/DY_Spring15_Asympt50ns_24june2015.root";
+  //"/home/hep/ikrav/work/ntuples/PHYS14/DYJetsToLL_PU20bx25_event_structure.root";
   // "/home/hep/ikrav/work/ntuples/PHYS14/TTJets_PU20bx25_event_structure.root";
 // Directory and tree name:
 const TString treeName = "ntupler/ElectronTree";
 
 const bool verbose = false;
-const bool smallEventCount = false;
+const bool smallEventCount = false; // DEBUG
 
 const float boundaryBarrelEndcap = 1.479;
 
 // Selection cuts
 // Kinematics
-const float ptCut = 25; 
+const float ptCut = 20; 
 
 const int nEtaBins = 5;
 const float etaBinLimits[nEtaBins+1] = {0.0, 0.8, 1.3, 2.0, 2.2, 2.5};
 
-const int rhoBinsPlots  = 20;
+const int rhoBinsPlots  = 50;
 const float rhoMinPlots = 0;
-const float rhoMaxPlots = 20;
+const float rhoMaxPlots = 50;
 
 const float rhoMinFit   = 3;
-const float rhoMaxFit   = 17;
+const float rhoMaxFit   = 40;
 
 //
 // Forward declarations
 //
 void drawAndFitEA(EffectiveAreaType eaType,
 		  int etaBin, TProfile *hist, float &area, float &areaErr);
+void drawIsoVsRho(int etaBin, TH2F *hist);
 
 //
 // Main program
@@ -88,7 +90,7 @@ void computeEffectiveArea(EffectiveAreaType eaType = EA_NEUTRAL_TOTAL){
     TString profName = profNameBase + TString::Format("_%d",i);
     hIsoPhoNhVsRho[i] = new TH2F(hName,"",
 				 rhoBinsPlots, rhoMinPlots, rhoMaxPlots, 
-				 100, 0, 50);
+				 1000, 0, 50);
     hIsoPhoNhVsRho[i]->GetXaxis()->SetTitle("rho");
     hIsoPhoNhVsRho[i]->GetYaxis()->SetTitle("ISO_{pho}+ISO_{neu.had.}");
     profIsoPhoNhVsRho[i] = new TProfile(profName,"",
@@ -129,8 +131,7 @@ void computeEffectiveArea(EffectiveAreaType eaType = EA_NEUTRAL_TOTAL){
   std::vector <float> *isoChargedHadrons = 0;
   std::vector <float> *isoNeutralHadrons = 0;
   std::vector <float> *isoPhotons = 0;
-  std::vector <int> *isTrueElectron = 0;
-  std::vector <int> *isTrueElectronAlternative = 0;
+  std::vector <int> *isTrue = 0;
   // Other vars  
   // Impact parameters
   std::vector <float> *eleD0 = 0;      // r-phi plane impact parameter
@@ -156,8 +157,7 @@ void computeEffectiveArea(EffectiveAreaType eaType = EA_NEUTRAL_TOTAL){
   TBranch *b_isoChargedHadrons = 0;
   TBranch *b_isoNeutralHadrons = 0;
   TBranch *b_isoPhotons = 0;
-  TBranch *b_isTrueElectron;
-  TBranch *b_isTrueElectronAlternative;
+  TBranch *b_isTrue;
   // Other vars
   TBranch *b_eleD0 = 0;
   TBranch *b_eleDZ = 0;
@@ -179,10 +179,7 @@ void computeEffectiveArea(EffectiveAreaType eaType = EA_NEUTRAL_TOTAL){
   treeSignal->SetBranchAddress("isoChargedHadrons", &isoChargedHadrons, &b_isoChargedHadrons);
   treeSignal->SetBranchAddress("isoNeutralHadrons", &isoNeutralHadrons, &b_isoNeutralHadrons);
   treeSignal->SetBranchAddress("isoPhotons",        &isoPhotons,        &b_isoPhotons);
-  treeSignal->SetBranchAddress("isTrueElectron",    &isTrueElectron,    &b_isTrueElectron);
-  treeSignal->SetBranchAddress("isTrueElectronAlternative",    
-			       &isTrueElectronAlternative,  
-			       &b_isTrueElectronAlternative);
+  treeSignal->SetBranchAddress("isTrue",    &isTrue,    &b_isTrue);
   treeSignal->SetBranchAddress("d0",                &eleD0,             &b_eleD0);
   treeSignal->SetBranchAddress("dz",                &eleDZ,             &b_eleDZ);
   treeSignal->SetBranchAddress("dEtaIn",            &eleDEtaIn,         &b_eleDEtaIn);
@@ -202,7 +199,7 @@ void computeEffectiveArea(EffectiveAreaType eaType = EA_NEUTRAL_TOTAL){
   //
   UInt_t maxEvents = treeSignal->GetEntries();
   if( smallEventCount )
-    maxEvents = 100000;
+    maxEvents = 1000000;
   if(verbose)
     printf("Start loop over events, total events = %lld\n", 
 	   treeSignal->GetEntries() );
@@ -226,8 +223,7 @@ void computeEffectiveArea(EffectiveAreaType eaType = EA_NEUTRAL_TOTAL){
     b_isoChargedHadrons->GetEntry(tentry);
     b_isoNeutralHadrons->GetEntry(tentry);
     b_isoPhotons->GetEntry(tentry);
-    b_isTrueElectron->GetEntry(tentry);
-    b_isTrueElectronAlternative->GetEntry(tentry);
+    b_isTrue->GetEntry(tentry);
     // Other vars
     b_eleD0->GetEntry(tentry);
     b_eleDZ->GetEntry(tentry);
@@ -247,7 +243,7 @@ void computeEffectiveArea(EffectiveAreaType eaType = EA_NEUTRAL_TOTAL){
 	continue;
 
       // Check truth match
-      if( isTrueElectron->at(iele) != 1 ) continue;
+      if( isTrue->at(iele) != 1 ) continue;
 
       // Loose ID of 2012 (VETO WP)
       const bool useID = false;
@@ -290,9 +286,11 @@ void computeEffectiveArea(EffectiveAreaType eaType = EA_NEUTRAL_TOTAL){
 	printf("Unknown isolation type requested, exiting.\n");
 	assert(0);
       }
-
-      hIsoPhoNhVsRho[ieta]->Fill( rho, iso);
-      profIsoPhoNhVsRho[ieta]->Fill( rho, iso);
+      
+      //if( iso>0 ){ // DEBUG
+	hIsoPhoNhVsRho[ieta]->Fill( rho, iso);
+	profIsoPhoNhVsRho[ieta]->Fill( rho, iso);
+	//}
 
     } // end loop over the electrons
 
@@ -307,6 +305,7 @@ void computeEffectiveArea(EffectiveAreaType eaType = EA_NEUTRAL_TOTAL){
   for(int ieta=0; ieta<nEtaBins; ieta++){
     drawAndFitEA(eaType, ieta, profIsoPhoNhVsRho[ieta], 
 		 effArea[ieta], effAreaErr[ieta]);
+    drawIsoVsRho(ieta, hIsoPhoNhVsRho[ieta]);
   }
 
   // 
@@ -362,7 +361,7 @@ void drawAndFitEA(EffectiveAreaType eaType, int etaBin,
   c2->cd();
   hist->SetMarkerStyle(20);
   hist->SetMarkerSize(1);
-  hist->GetYaxis()->SetRangeUser(0,4);
+  hist->GetYaxis()->SetRangeUser(0,8);
 
   hist->Draw("pe");
 
@@ -378,6 +377,19 @@ void drawAndFitEA(EffectiveAreaType eaType, int etaBin,
 					    eaTypeString[eaType].Data(),
 					    etaBin);
   c2->Print(outPlotFileName);
+
+  return;
+}
+
+void drawIsoVsRho(int etaBin, TH2F *hist){
+
+  TString canvasName = "isoVSrho_eta_";
+  canvasName += etaBin;
+
+  TCanvas *c1 = new TCanvas(canvasName,canvasName,10,10,600,600);
+  c1->cd();
+  hist->Draw("colz");
+  c1->Update();
 
   return;
 }
