@@ -22,7 +22,15 @@
 // With no gen level weights:
 //const float ea_neutral_total_iso[5] = {  0.0973,  0.0954,  0.0632,  0.0727,  0.1337};
 // With gen level weights:
-const float ea_neutral_total_iso[5] = {  0.0958,  0.0940,  0.0616,  0.0708,  0.1321};
+//const float ea_neutral_total_iso[5] = {  0.0958,  0.0940,  0.0616,  0.0708,  0.1321};
+
+// Spring15 25ns
+// tuned on the means with gen weights
+//const float ea_neutral_total_iso[5] = {  0.0946,  0.0958,  0.0658,  0.0669,  0.1169};
+
+// tuned on contours with no gen weights
+// const float ea_neutral_total_iso[5] = {  0.1796,  0.1849,  0.1550,  0.1520,  0.2244};
+const float ea_neutral_total_iso[7] = {  0.1752,  0.1862,  0.1411,  0.1534,  0.1903,  0.2243,  0.2687};
 
 // Tests:
 //const float ea_neutral_total_iso[5] = {  0.0655,  0.0674,  0.0319,  0.0551,  0.1149};
@@ -40,7 +48,10 @@ const float ea_neutral_total_iso[5] = {  0.0958,  0.0940,  0.0616,  0.0708,  0.1
 //
 // Signal sample: DYToLL
 const TString fileNameSignal =
-  "/afs/cern.ch/user/r/rkamalie/workspace/public/DY_Run2Asympt50ns_miniAOD_21july2015.root";
+  // Spring15 25ns:
+  "/afs/cern.ch/user/r/rkamalie/workspace/public/DY_Run2Asympt25ns_miniAOD_20july2015.root";
+  // Spring15 50ns:
+  //"/afs/cern.ch/user/r/rkamalie/workspace/public/DY_Run2Asympt50ns_miniAOD_21july2015.root";
 //"/afs/cern.ch/user/r/rkamalie/workspace/public/DY_Spring15_Asympt50ns_24june2015.root";
 //"/home/hep/ikrav/work/ntuples/PHYS14/DYJetsToLL_PU20bx25_event_structure.root";
   // "/home/hep/ikrav/work/ntuples/PHYS14/TTJets_PU20bx25_event_structure.root";
@@ -60,8 +71,10 @@ const float ptCut = 20;
 
 const float isoCut = 0.100;
 
-const int nEtaBins = 5;
-const float etaBinLimits[nEtaBins+1] = {0.0, 0.8, 1.3, 2.0, 2.2, 2.5};
+// const int nEtaBins = 5;
+// const float etaBinLimits[nEtaBins+1] = {0.0, 0.8, 1.3, 2.0, 2.2, 2.5};
+const int nEtaBins = 7;
+const float etaBinLimits[nEtaBins+1] = {0.0, 1.0, 1.479, 2.0, 2.2, 2.3, 2.4, 2.5};
 
 const int nNvtxBins = 15;
 const float nVtxBinLimits[nNvtxBins+1] = {5, 10, 13, 15, 
@@ -72,6 +85,8 @@ const float nVtxBinLimits[nNvtxBins+1] = {5, 10, 13, 15,
 // Forward declarations
 //
 void computeEfficiency(TH1F *hnum, TH1F *hdenum, TH1F *heff);
+
+void drawProgressBar(float progress);
 
 //
 // Main program
@@ -110,6 +125,8 @@ void validateCorrectedIsolationV2(bool forBarrel = true){
   TH1F *histFakeRaw   = new TH1F("histFakeRaw"  ,"", nNvtxBins, nVtxBinLimits);
   TH1F *histFakeDBeta = new TH1F("histFakeDBeta","", nNvtxBins, nVtxBinLimits);
   TH1F *histFakeEA    = new TH1F("histFakeEA"   ,"", nNvtxBins, nVtxBinLimits);
+
+  TH1F *histSoverB    = new TH1F("histSoverB"   ,"", nNvtxBins, nVtxBinLimits);
 
   // Since we might use weighted events:
   numEffRaw    ->Sumw2(); 
@@ -256,8 +273,9 @@ void validateCorrectedIsolationV2(bool forBarrel = true){
 	   treeSignal->GetEntries() );
   for(UInt_t ievent = 0; ievent < maxEvents; ievent++){
 
-    if( ievent%100000 == 0){
-      printf("."); fflush(stdout);
+    if( ievent%100000 == 0 || ievent == maxEvents-1){
+      //printf("."); fflush(stdout);
+      drawProgressBar( (1.0*ievent+1)/maxEvents);
     }
     Long64_t tentry = treeSignal->LoadTree(ievent);
     
@@ -445,6 +463,19 @@ void validateCorrectedIsolationV2(bool forBarrel = true){
   leg2->SetFillStyle(0);
   leg2->Draw("same");
 
+  TString canvasName3 = "c3";
+  TCanvas *c3 = new TCanvas(canvasName3,canvasName3,10,10,610,600);
+  c3->cd();
+
+  histSoverB  ->SetMarkerStyle(24);
+  histSoverB  ->SetMarkerColor(kBlack);
+  histSoverB->GetXaxis()->SetTitle("Nvtx");
+  histSoverB->GetYaxis()->SetTitle("Eff(signal) / FakeRate(background)");
+
+  histSoverB->Divide(histEffEA, histFakeEA);
+
+  histSoverB->Draw("PE");
+
 
 }
 
@@ -484,3 +515,22 @@ void computeEfficiency(TH1F *hnum, TH1F *hdenum, TH1F *heff){
   return;
 }
 
+void drawProgressBar(float progress){
+
+  const int barWidth = 70;
+  
+  std::cout << "[";
+  int pos = barWidth * progress;
+  for (int i = 0; i < barWidth; ++i) {
+    if (i < pos) std::cout << "=";
+    else if (i == pos) std::cout << ">";
+    else std::cout << " ";
+  }
+  std::cout << "] " << int(progress * 100.0) << " %\r";
+  std::cout.flush();
+  
+  if( progress >= 1.0 )
+    std::cout << std::endl;
+
+  return;
+}
