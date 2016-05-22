@@ -34,7 +34,8 @@ const TString eaTypeString[4] = {
 //
 // Signal sample: DYToLL
 const TString fileNameSignal = 
-  "/afs/cern.ch/user/r/rkamalie/workspace/public/DY_Run2Asympt50ns_miniAOD_21july2015.root";
+  "/afs/cern.ch/user/i/ikrav/workspace/ntuples/Spring16/DYJetsToLL_madgraph_80X.root";
+  //"/afs/cern.ch/user/r/rkamalie/workspace/public/DY_Run2Asympt50ns_miniAOD_21july2015.root";
   //"/afs/cern.ch/user/r/rkamalie/workspace/public/DY_Spring15_Asympt50ns_24june2015.root";
   //"/home/hep/ikrav/work/ntuples/PHYS14/DYJetsToLL_PU20bx25_event_structure.root";
   // "/home/hep/ikrav/work/ntuples/PHYS14/TTJets_PU20bx25_event_structure.root";
@@ -42,7 +43,7 @@ const TString fileNameSignal =
 const TString treeName = "ntupler/ElectronTree";
 
 const bool verbose = false;
-const bool smallEventCount = false; // DEBUG
+const bool smallEventCount = true; // DEBUG
 
 const bool useWeights = true;
 

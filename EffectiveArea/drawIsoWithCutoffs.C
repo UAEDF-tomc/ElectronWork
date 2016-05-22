@@ -21,7 +21,8 @@
 
 // Signal sample: DYToLL
 const TString fileNameSignal = 
-  "/afs/cern.ch/user/r/rkamalie/workspace/public/DY_Spring15_Asympt50ns_24june2015.root";
+  "/afs/cern.ch/user/i/ikrav/workspace/ntuples/Spring16/DYJetsToLL_madgraph_80X.root";
+//"/afs/cern.ch/user/r/rkamalie/workspace/public/DY_Spring15_Asympt50ns_24june2015.root";
 // Directory and tree name:
 const TString treeName = "ntupler/ElectronTree";
 
