@@ -27,6 +27,9 @@ drawIsoWithCutoffs.C
      and draws the XX% contours and the mean. The constants for contours 
      and the mean come from another script.
 
+computeEffectiveAreaWithIsoCutoffs.C
+     The script computes the effective areas based on the XX-% efficiency contours.
+
 validateCorrectedIsolationAbs.C
      A variation of the validate script, draws the eff(Nvtx)
      not for relative but for the absolute total neutral isolation.
