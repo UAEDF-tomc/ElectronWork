@@ -56,3 +56,7 @@ drawSigBgIso.C
 computeEffectiveArea_v2.C
     A test of computing effective areas with via the mean, but
     after applying some upper cut-off to the values that go into the mean.
+
+testCutoffCalculation.C
+    A script that computes error on the cutoff using the efficiency curve method
+    and the toy MC method, for comparisons.
