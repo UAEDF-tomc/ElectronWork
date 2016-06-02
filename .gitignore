@@ -5,6 +5,7 @@
 *_cc.d
 *_hh.d
 *_C.d
+*.pcm
 
 # Logs #
 ########
@@ -24,3 +25,9 @@ SelectionOptimization/figures/*
 # Backup copies #
 #################
 *~
+
+# Pictures, plots #
+###################
+*.gif
+*.png
+*.pdf
