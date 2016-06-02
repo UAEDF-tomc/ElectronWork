@@ -29,21 +29,24 @@ const TString eaTypeString[4] = {
   "neutral_hadron",
   "neutral_total"};
 
+const TString eaTypeAxisLabel[4] = {
+  "ISO_{ch.had}",
+  "ISO_{pho}",
+  "ISO_{neu.had.}",
+  "ISO_{pho}+ISO_{neu.had.}"};
+
 // For this exercise, we use two MC samples: the signal sample
 // and a background-reach sample. Both have the same ntuple structure.
 //
 // Signal sample: DYToLL
 const TString fileNameSignal = 
-  "/afs/cern.ch/user/i/ikrav/workspace/ntuples/Spring16/DYJetsToLL_madgraph_80X.root";
-  //"/afs/cern.ch/user/r/rkamalie/workspace/public/DY_Run2Asympt50ns_miniAOD_21july2015.root";
-  //"/afs/cern.ch/user/r/rkamalie/workspace/public/DY_Spring15_Asympt50ns_24june2015.root";
-  //"/home/hep/ikrav/work/ntuples/PHYS14/DYJetsToLL_PU20bx25_event_structure.root";
-  // "/home/hep/ikrav/work/ntuples/PHYS14/TTJets_PU20bx25_event_structure.root";
+  "~/DYJetsToLL_madgraph_80X.root";
+//"/afs/cern.ch/user/i/ikrav/workspace/ntuples/Spring16/DYJetsToLL_madgraph_80X.root";
 // Directory and tree name:
 const TString treeName = "ntupler/ElectronTree";
 
 const bool verbose = false;
-const bool smallEventCount = true; // DEBUG
+const bool smallEventCount = false; // DEBUG
 
 const bool useWeights = true;
 
@@ -53,15 +56,15 @@ const float boundaryBarrelEndcap = 1.479;
 // Kinematics
 const float ptCut = 20; 
 
-const int nEtaBins = 5;
-const float etaBinLimits[nEtaBins+1] = {0.0, 0.8, 1.3, 2.0, 2.2, 2.5};
+const int nEtaBins = 7;
+const float etaBinLimits[nEtaBins+1] = {0.0, 1.0, 1.479, 2.0, 2.2, 2.3, 2.4, 2.5};
 
-const int rhoBinsPlots  = 50;
+const int rhoBinsPlots  = 35;
 const float rhoMinPlots = 0;
-const float rhoMaxPlots = 50;
+const float rhoMaxPlots = 35;
 
 const float rhoMinFit   = 3;
-const float rhoMaxFit   = 40;
+const float rhoMaxFit   = 25;
 
 //
 // Forward declarations
@@ -97,12 +100,14 @@ void computeEffectiveAreaV2(EffectiveAreaType eaType = EA_NEUTRAL_TOTAL){
 				 1000, 0, 50);
     hIsoPhoNhVsRho[i]->Sumw2();
     hIsoPhoNhVsRho[i]->GetXaxis()->SetTitle("rho");
-    hIsoPhoNhVsRho[i]->GetYaxis()->SetTitle("ISO_{pho}+ISO_{neu.had.}");
+    hIsoPhoNhVsRho[i]->GetYaxis()->SetTitle(eaTypeAxisLabel[eaType]);
     profIsoPhoNhVsRho[i] = new TProfile(profName,"",
 					rhoBinsPlots, rhoMinPlots, rhoMaxPlots);
     profIsoPhoNhVsRho[i]->Sumw2();
     profIsoPhoNhVsRho[i]->GetXaxis()->SetTitle("rho");
-    profIsoPhoNhVsRho[i]->GetYaxis()->SetTitle("<ISO_{pho}+ISO_{neu.had.}>");
+    TString averageString = TString::Format("<%s>", 
+					    eaTypeAxisLabel[eaType].Data());
+    profIsoPhoNhVsRho[i]->GetYaxis()->SetTitle(averageString);
   }
 
   //

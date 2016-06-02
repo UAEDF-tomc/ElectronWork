@@ -18,11 +18,17 @@
 
 #include <vector>
 
+// Spring16 
+// 90% contours
+//const float ea_neutral_total_iso[7] = {0.1703,  0.1715,  0.1213,  0.1230,  0.1635, 0.1937, 0.2393};
+// Mean-based
+const float ea_neutral_total_iso[7] = {  0.0932,  0.0919,  0.0512,  0.0591,  0.0882,  0.1101,  0.1373};
+
 //Spring15 50ns:
 // With no gen level weights:
 //const float ea_neutral_total_iso[5] = {  0.0973,  0.0954,  0.0632,  0.0727,  0.1337};
 // With gen level weights:
-const float ea_neutral_total_iso[5] = {  0.0958,  0.0940,  0.0616,  0.0708,  0.1321};
+//const float ea_neutral_total_iso[5] = {  0.0958,  0.0940,  0.0616,  0.0708,  0.1321};
 
 // Tests:
 //const float ea_neutral_total_iso[5] = {  0.0655,  0.0674,  0.0319,  0.0551,  0.1149};
@@ -40,10 +46,8 @@ const float ea_neutral_total_iso[5] = {  0.0958,  0.0940,  0.0616,  0.0708,  0.1
 //
 // Signal sample: DYToLL
 const TString fileNameSignal =
-  "/afs/cern.ch/user/r/rkamalie/workspace/public/DY_Run2Asympt50ns_miniAOD_21july2015.root";
-//"/afs/cern.ch/user/r/rkamalie/workspace/public/DY_Spring15_Asympt50ns_24june2015.root";
-//"/home/hep/ikrav/work/ntuples/PHYS14/DYJetsToLL_PU20bx25_event_structure.root";
-  // "/home/hep/ikrav/work/ntuples/PHYS14/TTJets_PU20bx25_event_structure.root";
+  "~/DYJetsToLL_madgraph_80X.root";
+
 // Directory and tree name:
 const TString treeName = "ntupler/ElectronTree";
 
@@ -136,10 +140,12 @@ void validateCorrectedIsolationV2(bool forBarrel = true){
   histEffRaw->GetYaxis()->SetRangeUser(0.7, 1.0);
   histEffRaw->GetXaxis()->SetTitle("Nvtx");
   histEffRaw->GetYaxis()->SetTitle("Efficiency");
+  histEffRaw->GetYaxis()->SetTitleOffset(1.4);
 
   histFakeRaw->GetYaxis()->SetRangeUser(0.0, 0.5);
   histFakeRaw->GetXaxis()->SetTitle("Nvtx");
   histFakeRaw->GetYaxis()->SetTitle("Fake rate");
+  histFakeRaw->GetYaxis()->SetTitleOffset(1.4);
 
   //
   // Open a file and find the tree with electron data

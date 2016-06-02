@@ -1,4 +1,7 @@
 #include <iostream>
+#include "TLine.h"
+#include "TGraphErrors.h"
+#include "TGraphAsymmErrors.h"
 #include <fstream>
 #include "TSystem.h"
 #include "TStyle.h"
@@ -18,26 +21,38 @@
 #include <vector>
 
 enum EffectiveAreaType {
+  EA_UNDEFINED=-1,
   EA_CHARGED=0,
   EA_PHOTON,
   EA_NEUTRAL_HADRON,
   EA_NEUTRAL_TOTAL };
 
 const TString eaTypeString[4] = {
-  "charged",
+  "charged hadron",
   "photon",
-  "neutral_hadron",
-  "neutral_total"};
+  "neutral hadron",
+  "neutral hadron and photon"};
+
+enum MethodType {
+  METHOD_UNDEFINED = -1,
+  METHOD_TOY_MC,
+  METHOD_EFF_CURVE};
+
 
 //
 // Signal sample: DYToLL
 const TString fileNameSignal = 
-  "/afs/cern.ch/user/i/ikrav/workspace/ntuples/Spring16/DYJetsToLL_madgraph_80X.root";
+  // "/afs/cern.ch/user/i/ikrav/workspace/ntuples/Spring16/DYJetsToLL_madgraph_80X.root";
+  "~/DYJetsToLL_madgraph_80X.root";
 // Directory and tree name:
 const TString treeName = "ntupler/ElectronTree";
 
 const bool verbose = false;
-const bool smallEventCount = true; // DEBUG
+const bool smallEventCount = false; // DEBUG
+
+const float minEntries = 100;
+
+const MethodType method = METHOD_EFF_CURVE;
 
 // Selection cuts
 // Kinematics
@@ -45,12 +60,15 @@ const float ptCut = 20;
 
 const float cutoffFraction = 0.90;
 
-const int nEtaBins = 5;
-const float etaBinLimits[nEtaBins+1] = {0.0, 0.8, 1.3, 2.0, 2.2, 2.5};
+const int nEtaBins = 7;
+// const float etaBinLimits[nEtaBins+1] = {0.0, 0.8, 1.3, 2.0, 2.2, 2.5};
+//const float etaBinLimits[nEtaBins+1] = {0.0, 1.0, 1.479, 2.0, 2.2, 2.5};
+const float etaBinLimits[nEtaBins+1] = 
+  {0.0, 1.0, 1.479, 2.0, 2.2, 2.3, 2.4, 2.5};
 
-const int rhoBinsPlots  = 50;
+const int rhoBinsPlots  = 35;
 const float rhoMinPlots = 0;
-const float rhoMaxPlots = 50;
+const float rhoMaxPlots = 35;
 
 const int isoBinsPlots  = 1100;
 const float isoMinPlots = -1;
@@ -60,13 +78,21 @@ const float isoMaxPlots = 10;
 const float rhoMinFit   = 2;
 const float rhoMaxFit   = 25;
 
+// Global variables
+TH2F *dummy; // A histogram for drawing graphs on top of it
+EffectiveAreaType eaTypeGlobal = EA_UNDEFINED;
+
 //
 // Forward declarations
 //
 void drawIsoVsRho(int etaBin, TH2F *hist);
 void computeCutoff(TH1D *hist, float &total, float &cutoff);
-void computeCutoffAndError(TH1D *hist, float &cutoff, float &cutoffErr, TCanvas *canv);
-void drawCutoffsAndFit(int etaBin, TH1F *hist, float &a, float &b);
+void computeCutoffAndErrorMethodToy(TH1D *hist, float &cutoff, float &cutoffErrPlus, 
+			      float &cutoffErrMinus, TCanvas *canv);
+void computeCutoffAndErrorMethodEff(TH1D *hist, float &cutoff, float &cutoffErrPlus,
+			      float &cutoffErrMinus, TCanvas *canv);
+void interpolate( float x1, float x2, float y1, float y2, float &x, float y);
+void drawCutoffsAndFit(int etaBin, TH1F *hist, TGraphAsymmErrors *graph, float &a, float &b, float &bErr);
 
 double box(double x);
 Double_t isoShape(Double_t *x, Double_t *par);
@@ -76,6 +102,8 @@ Double_t isoShape(Double_t *x, Double_t *par);
 //
 
 void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOTAL){
+
+  eaTypeGlobal = eaType;
 
   // This statement below should not be needed, but in one particular node I had to
   // add it, somehow the vector header was not loaded automatically there.
@@ -89,6 +117,7 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
   TH2F *hIsoPhoNhVsRho[nEtaBins];
   TString hNameBase = "hIsoPhoNhVsRho";
   TH1F *hCutoffs[nEtaBins];
+  TGraphAsymmErrors *hCutoffsGraph[nEtaBins];
   TString hCutoffNameBase = "hCutoffs";
   for(int i=0; i<nEtaBins; i++){
     TString hName = hNameBase + TString::Format("_%d",i);
@@ -100,6 +129,9 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
 
     TString hCutoffName = hCutoffNameBase + TString::Format("_%d",i);
     hCutoffs[i] = new TH1F(hCutoffName, "", rhoBinsPlots, rhoMinPlots, rhoMaxPlots);
+    TString hCutoffGraphName = hCutoffName + TString("_graph");
+    hCutoffsGraph[i] = new TGraphAsymmErrors(rhoBinsPlots);
+    hCutoffsGraph[i]->SetName(hCutoffGraphName);
   }
 
   //
@@ -243,27 +275,42 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
 
   float A[nEtaBins];
   float B[nEtaBins];
-  float cutoff, cutoffErr;
+  float BErr[nEtaBins];
+  float cutoff, cutoffErrPlus, cutoffErrMinus;
   TCanvas *canv = new TCanvas("slices","",10,10,600,600);
-  canv->SetLogy();
+  //canv->SetLogy();
   for(int ieta=0; ieta<nEtaBins; ieta++){
     // Loop over rhos and find a cut-off for each rho for this eta range
     for(int iRho = 1; iRho <= rhoBinsPlots; iRho++){
       // Create a rho slice for the 2D histogram of the given eta bin
       TH1D *hSlice =  hIsoPhoNhVsRho[ieta]->ProjectionY("_py",iRho, iRho);
       hSlice->Rebin(5);
-      computeCutoffAndError(hSlice, cutoff, cutoffErr, canv);
+      if( method == METHOD_TOY_MC ){
+	// Method with errors on the cutoff based on a toy ensemble
+	computeCutoffAndErrorMethodToy(hSlice, cutoff, cutoffErrPlus, cutoffErrMinus, canv);
+      }else if( method == METHOD_EFF_CURVE ){
+	// Method with errors on the cutoff based on the efficiency curve analysis
+	computeCutoffAndErrorMethodEff(hSlice, cutoff, cutoffErrPlus, cutoffErrMinus, canv);
+      }else{
+	printf("Unknown method, crashing\n");
+	assert(0);
+      }
       hCutoffs[ieta]->SetBinContent(iRho, cutoff);
-      hCutoffs[ieta]->SetBinError(iRho, cutoffErr);
+      hCutoffs[ieta]->SetBinError(iRho, min(cutoffErrPlus, cutoffErrMinus));
+      float x = hCutoffs[ieta]->GetBinCenter(iRho);
+      float dx = 0.5 * hCutoffs[ieta]->GetBinWidth(iRho);
+      hCutoffsGraph[ieta]->SetPoint(iRho, x, cutoff);
+      hCutoffsGraph[ieta]->SetPointError(iRho, dx, dx, cutoffErrMinus, cutoffErrPlus);
       
       delete hSlice;
     } // end loop over rho
 
     drawIsoVsRho(ieta, hIsoPhoNhVsRho[ieta]);
-    float a, b;
-    drawCutoffsAndFit (ieta, hCutoffs[ieta], a, b);
+    float a, b, bErr;
+    drawCutoffsAndFit (ieta, hCutoffs[ieta], hCutoffsGraph[ieta], a, b, bErr);
     A[ieta] = a;
     B[ieta] = b;
+    BErr[ieta] = bErr;
   } //end loop over eta bins
 
   TString singleLineA = TString::Format("const float cutoff_A[%d] = { ",nEtaBins);
@@ -282,10 +329,21 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
   printf("\n%s", singleLineA.Data());
   printf("%s", singleLineB.Data());
 
+  // Print the effective area constants in CMSSW-like format
+  printf("\nCMSSW-like printout of the effective areas\n");
+  printf("# |eta| min   |eta| max   effective area    error\n");
+  for(int ieta = 0; ieta<nEtaBins; ieta++){
+    printf("%10.3f   %10.3f   %10.4f   %10.4f\n", 
+	   etaBinLimits[ieta], etaBinLimits[ieta+1],
+	   B[ieta], BErr[ieta]);
+  }
+  printf("\n");
+
   TFile *fout = new TFile("cutoffs.root","recreate");
   fout->cd();
   for(int ieta=0; ieta<nEtaBins; ieta++){
     hCutoffs[ieta]->Write();
+    hCutoffsGraph[ieta]->Write();
     hIsoPhoNhVsRho[ieta]->Write();
   }
   fout->Close();
@@ -334,13 +392,15 @@ void computeCutoff(TH1D *hist, float &total, float &cutoff){
   return;
 }
 
-void computeCutoffAndError(TH1D *hist, float &cutoff, float &cutoffErr, TCanvas *canv){
+void computeCutoffAndErrorMethodToy(TH1D *hist, float &cutoff, float &cutoffErrPlus, 
+				    float &cutoffErrMinus, TCanvas *canv){
 
 
   float total = 0;
   computeCutoff(hist, total, cutoff);
   
   const float largeCutoffError = 10;
+  float cutoffErr = 0;
   if( total < 500 ) {
     // not enough data for reliable cutoff computations
     cutoff = 999;
@@ -390,6 +450,9 @@ void computeCutoffAndError(TH1D *hist, float &cutoff, float &cutoffErr, TCanvas 
     //delete isofunc; // deleting function causes crash for some reason
   } // end if enough statistics
   
+  cutoffErrPlus = cutoffErr;
+  cutoffErrMinus = cutoffErr;
+
   canv->cd();
   hist->SetMarkerStyle(20);
   hist->SetMarkerSize(1);
@@ -399,7 +462,153 @@ void computeCutoffAndError(TH1D *hist, float &cutoff, float &cutoffErr, TCanvas 
   // cin >> xxx;
 }
 
-void drawCutoffsAndFit(int etaBin, TH1F *hist, float &a, float &b){
+void computeCutoffAndErrorMethodEff(TH1D *hist, float &cutoff, float &cutoffErrPlus,
+				    float &cutoffErrMinus, TCanvas *canv){
+
+  int   nbins = hist->GetNbinsX();
+  float xlow = hist->GetXaxis()->GetBinLowEdge(1);
+  float xhigh = hist->GetXaxis()->GetBinUpEdge(nbins);
+
+  // initialize to some large values
+  cutoff = 2*xhigh;
+  cutoffErrPlus = 2*xhigh;
+  cutoffErrMinus = 2*xhigh;
+  
+  // Compute the total event counts
+  float total = 0;
+  float totalNonZero =0;
+  float totalErr = 0;
+  for(int i=1; i<=nbins+1; i++) { // include overflows
+    total += hist->GetBinContent(i);
+    totalErr += hist->GetBinError(i) * hist->GetBinError(i);
+    if( ! (hist->GetXaxis()->GetBinLowEdge(i) <= 0) )
+      totalNonZero += hist->GetBinContent(i);
+  }
+  totalErr = sqrt(totalErr);
+  if( total < minEntries)
+    return;
+
+  TGraphErrors *grEff = new TGraphErrors(0);
+  grEff->SetMarkerStyle(20);
+  grEff->SetMarkerSize(0.5);
+  grEff->SetFillColor(kMagenta);
+
+  for(int i=1; i<=nbins; i++){
+    
+    // Find numerator for the efficiency
+    float inRange = 0;
+    float inRangeErr = 0;
+    for(int irange = 1; irange <= i; irange++){
+      inRange += hist->GetBinContent(irange);
+      inRangeErr += hist->GetBinError(irange) * hist->GetBinError(irange);
+    }
+    inRangeErr = sqrt(inRangeErr);
+    // Find the efficiency
+    float eff = 0;
+    float effErr = 1;
+    if(total>0){
+      eff = inRange/total;
+      effErr = sqrt( eff*(1-eff)/totalNonZero );
+    }
+    // Save into graph
+    float cutVal = hist->GetXaxis()->GetBinUpEdge(i);
+    float cutValErr = hist->GetXaxis()->GetBinWidth(i)/2.0;
+    int newPointIndex = grEff->GetN();
+    grEff->SetPoint( newPointIndex, cutVal, eff);
+    grEff->SetPointError( newPointIndex, cutValErr, effErr);
+  } 
+
+  // Next, find the efficiency cutoff value and its errors
+  float cutoffLow = xlow;
+  float cutoffHigh = xlow;
+  cutoff = xlow;
+  int npoints = grEff->GetN();
+  Double_t *xArray      = grEff->GetX();
+  Double_t *effArray    = grEff->GetY();
+  Double_t *effErrArray = grEff->GetEY();
+  // Central values
+  for(int i=1; i < npoints; i++){ // Do not start with point zero
+    if( effArray[i] > cutoffFraction){
+      // Found the first efficiency value above threshold
+      // Interpolate and find the cutoff value 
+      interpolate( xArray[i-1], xArray[i], effArray[i-1],effArray[i],
+		   cutoff, cutoffFraction);
+      break;
+    }
+  }
+  // Error up
+  for(int i=1; i < npoints; i++){ // Do not start with point zero
+    if( effArray[i] + effErrArray[i] > cutoffFraction){
+      // Found the first efficiency value above threshold
+      // Interpolate and find the cutoff value
+      interpolate( xArray[i-1], xArray[i], 
+		   effArray[i-1] + effErrArray[i-1],
+		   effArray[i] + effErrArray[i],
+		   cutoffLow, cutoffFraction);
+      break;
+    }
+  }
+  // Error down
+  for(int i=1; i < npoints; i++){ // Do not start with point zero
+    if( effArray[i] - effErrArray[i] > cutoffFraction){
+      // Found the first efficiency value above threshold
+      // Interpolate and find the cutoff value
+      interpolate( xArray[i-1], xArray[i], 
+		   effArray[i-1] - effErrArray[i-1],
+		   effArray[i] - effErrArray[i],
+		   cutoffHigh, cutoffFraction);
+      break;
+    }
+  }
+  cutoffErrPlus = cutoffHigh - cutoff;
+  cutoffErrMinus = cutoff - cutoffLow;
+
+
+  printf("Method eff curve: Cutoff is at %f + %f - %f\n", cutoff, 
+	 cutoffErrPlus,
+	 cutoffErrMinus);
+
+
+  //
+  // Draw the result
+  //
+  canv->cd();
+  gStyle->SetOptStat(0);
+
+  if(dummy != 0)
+    delete dummy;
+  dummy = new TH2F("dummy","",100, xlow, xhigh, 100, 0, 1.2);
+  dummy->GetXaxis()->SetTitle("cut value");
+  dummy->GetYaxis()->SetTitle("efficiency");
+  dummy->Draw();
+
+  grEff->Draw("E3,same");
+  grEff->SetLineWidth(0); // suppress drawing error bars
+  grEff->DrawClone("P,same");
+  // Draw lines to show the cutoff, etc
+  TLine *hline = new TLine(xlow, cutoffFraction, xhigh, cutoffFraction);
+  hline->Draw("same");
+  TLine *vline1 = new TLine(cutoffLow,  0, cutoffLow,  1.2);
+  TLine *vline2 = new TLine(cutoff,     0, cutoff,     1.2);
+  TLine *vline3 = new TLine(cutoffHigh, 0, cutoffHigh, 1.2);
+  vline1->Draw("same");
+  vline2->Draw("same");
+  vline3->Draw("same");
+  canv->Update();
+
+}
+
+void interpolate( float x1, float x2, float y1, float y2, float &x, float y){
+
+  x = x1 + (y-y1)*(x2-x1)/(y2-y1);
+
+  // printf("x1= %f  x2= %f  y1= %f  y2= %f  x= %f  y= %f\n",
+  //     x1, x2, y1, y2, x, y);
+  return;
+}
+
+void drawCutoffsAndFit(int etaBin, TH1F *hist, TGraphAsymmErrors *graph, float &a, 
+		       float &b, float &bErr){
 
   printf("Start fitting\n");
 
@@ -411,17 +620,25 @@ void drawCutoffsAndFit(int etaBin, TH1F *hist, float &a, float &b){
   hist->SetMarkerStyle(20);
   hist->SetMarkerSize(1);
   hist->GetYaxis()->SetRangeUser(-1,10);
-  hist->Draw("PE");
+  TString yaxisTitle = eaTypeString[eaTypeGlobal] + TString(" isolation");
+  hist->GetXaxis()->SetTitle("rho");
+  hist->GetYaxis()->SetTitle(yaxisTitle);
+  hist->Draw("P");
+  graph->SetMarkerStyle(20);
+  graph->SetMarkerSize(1);
+  graph->Draw("PE,same");
 
   TF1 *func = new TF1("func", "pol1",rhoMinFit, rhoMaxFit);
-  hist->Fit("func","R");
+  graph->Fit("func","R");
   printf("Finished fitting\n");
   printf("The histogram is\n");
   a = func->GetParameter(0);
   b = func->GetParameter(1);
+  bErr = func->GetParError(1);
   
   c1->Update();
-
+  TString cFileName = TString("figures/") + canvasName + TString(".png");
+  c1->Print(cFileName);
 		      
   return;
 }
