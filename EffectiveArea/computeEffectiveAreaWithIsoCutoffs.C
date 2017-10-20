@@ -43,7 +43,7 @@ enum MethodType {
 // Signal sample: DYToLL
 const TString fileNameSignal = 
   // "/afs/cern.ch/user/i/ikrav/workspace/ntuples/Spring16/DYJetsToLL_madgraph_80X.root";
-  "~/DYJetsToLL_madgraph_80X.root";
+  "/eos/user/i/ikrav/ElectronID/92X/DYJetsToLL_cutID_tuning_92X_v1.root";
 // Directory and tree name:
 const TString treeName = "ntupler/ElectronTree";
 
@@ -66,17 +66,17 @@ const int nEtaBins = 7;
 const float etaBinLimits[nEtaBins+1] = 
   {0.0, 1.0, 1.479, 2.0, 2.2, 2.3, 2.4, 2.5};
 
-const int rhoBinsPlots  = 35;
+const int rhoBinsPlots  = 50;
 const float rhoMinPlots = 0;
-const float rhoMaxPlots = 35;
+const float rhoMaxPlots = 50;
 
 const int isoBinsPlots  = 1100;
 const float isoMinPlots = -1;
 const float isoMaxPlots = 10;
 
 // Limit the fit range to avoid low statistics edge effects
-const float rhoMinFit   = 2;
-const float rhoMaxFit   = 25;
+const float rhoMinFit   = 5;
+const float rhoMaxFit   = 35;
 
 // Global variables
 TH2F *dummy; // A histogram for drawing graphs on top of it

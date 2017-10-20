@@ -40,8 +40,7 @@ const TString eaTypeAxisLabel[4] = {
 //
 // Signal sample: DYToLL
 const TString fileNameSignal = 
-  "~/DYJetsToLL_madgraph_80X.root";
-//"/afs/cern.ch/user/i/ikrav/workspace/ntuples/Spring16/DYJetsToLL_madgraph_80X.root";
+  "/eos/user/i/ikrav/ElectronID/92X/DYJetsToLL_cutID_tuning_92X_v1.root";
 // Directory and tree name:
 const TString treeName = "ntupler/ElectronTree";
 

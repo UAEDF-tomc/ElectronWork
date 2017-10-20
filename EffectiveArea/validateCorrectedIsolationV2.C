@@ -18,11 +18,16 @@
 
 #include <vector>
 
+
+// Fall17
+// 90% contours
+const float ea_neutral_total_iso[7] = {  0.1566,  0.1626,  0.1073,  0.0854,  0.1051,  0.1204,  0.1524};
+
 // Spring16 
 // 90% contours
 //const float ea_neutral_total_iso[7] = {0.1703,  0.1715,  0.1213,  0.1230,  0.1635, 0.1937, 0.2393};
 // Mean-based
-const float ea_neutral_total_iso[7] = {  0.0932,  0.0919,  0.0512,  0.0591,  0.0882,  0.1101,  0.1373};
+//const float ea_neutral_total_iso[7] = {  0.0932,  0.0919,  0.0512,  0.0591,  0.0882,  0.1101,  0.1373};
 
 //Spring15 50ns:
 // With no gen level weights:
@@ -46,7 +51,7 @@ const float ea_neutral_total_iso[7] = {  0.0932,  0.0919,  0.0512,  0.0591,  0.0
 //
 // Signal sample: DYToLL
 const TString fileNameSignal =
-  "~/DYJetsToLL_madgraph_80X.root";
+  "/eos/user/i/ikrav/ElectronID/92X/DYJetsToLL_cutID_tuning_92X_v1.root";
 
 // Directory and tree name:
 const TString treeName = "ntupler/ElectronTree";

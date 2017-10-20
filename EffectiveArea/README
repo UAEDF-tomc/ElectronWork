@@ -60,3 +60,54 @@ computeEffectiveArea_v2.C
 testCutoffCalculation.C
     A script that computes error on the cutoff using the efficiency curve method
     and the toy MC method, for comparisons.
+
+hoeEnergyPrepare2D.C
+hoeEnergyFindDependence.C
+hoeRhoPrepare2D.C
+hoeRhoFindDependence.C
+hoeROC.C
+drawROCs.C
+drawFlatPtEff.C
+    This set of scripts is for studying H/E cut dependence on energy
+    and pileup.
+
+
+======================================================================
+Notes on computing the effective areas for cut-based electron ID tuning.
+======================================================================
+
+=== October 2017 ===
+
+   Simply run in ROOT:
+
+.L computeEffectiveAreaWithIsoCutoffs.C+
+computeEffectiveAraWithIsoCutoff(EA_NEUTRAL_TOTAL);
+
+This prints out on the screen the constants table that goes
+into the appropriate file in RecoEgamma/ElectronIdentification/data/.....
+
+The effective areas are based on 90% contours, like for 
+the 2016 electron ID. One can run this script in "verbose"
+mode and on a smaller event sample by changing the appropriate
+boolean flag in the script.
+
+The ntuples that are fed into this script (defined in the beginning
+of the script as const TString) come from running the SimpleElectronNtupler,
+available fromthe links below (the ntupler code, the python config, and
+the crab script to run the production):
+
+https://github.com/ikrav/EgammaWork/blob/ntupler_and_VID_benchmarks_9XX/ElectronNtupler/plugins/SimpleElectronNtupler.cc
+https://github.com/ikrav/EgammaWork/blob/ntupler_and_VID_benchmarks_9XX/ElectronNtupler/test/runElectrons.py
+https://github.com/ikrav/EgammaWork/blob/ntupler_and_VID_benchmarks_9XX/ElectronNtupler/test/crab_config_electrons_DY.py
+
+To validate the effective area constants, use the script
+validateCorrectedIsolationV2.C. In the beginning, edit the
+line with the effective area constants, cut and paste there
+the array of the slopes printed out by the previous script,
+and run this validate... script twice, with the arguments true (for barrel)
+and false (for the endcap). The efficiency for the isolation with
+the effective area correction on the resulting plot should be nearly flat.
+
+One can also compute effective areas that are mean-based with the
+script computeEffectiveAreaV2.C, and validate them with the above validate...
+script.
