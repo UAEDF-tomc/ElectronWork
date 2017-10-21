@@ -22,6 +22,9 @@
 // Fall17
 // 90% contours
 const float ea_neutral_total_iso[7] = {  0.1566,  0.1626,  0.1073,  0.0854,  0.1051,  0.1204,  0.1524};
+// Mean-based
+//const float ea_neutral_total_iso[7] = {  0.0916,  0.0965,  0.0521,  0.0423,  0.0546,  0.0608,  0.0749};
+
 
 // Spring16 
 // 90% contours
