@@ -1,27 +1,34 @@
 {
 
-  const TString finName1 = "~/DoubleEleFlat1to300_92X_v1.root";
-  const TString finName2 = "~/DoubleEleFlat300to6500_92X_v1.root";
+  // Signal sample
+  //const TString finName = "~/DYJetsToLL_cutID_tuning_92X_v1.root";
+
+  // Background sample
+  const TString finName1 = "~/TTJets_cutID_92X_v1.root";
+
   const TString treeName = "ntupler/ElectronTree";
 
   TFile *fin1 = new TFile(finName1);
   TTree *tree1 = (TTree*)fin1->Get(treeName);
 
-  TFile *fin2 = new TFile(finName2);
-  TTree *tree2 = (TTree*)fin2->Get(treeName);
 
-  TString cutsGeneral = "abs(etaSC)<1.4442 && pt>10";
-  //TString cuts = "abs(etaSC)>1.566 && abs(etaSC)<2.5 && pt>10 && hOverE>0";
+  // Barrel cuts
+  //TString cutsGeneral = "isTrue==1 && abs(etaSC)<1.4442 && pt>10";
+  TString cutsGeneral = "(isTrue==0 || isTrue==3) && abs(etaSC)<1.4442 && pt>10";
+
+  // Endcap cuts
+  //TString cuts = "isTrue==1 && abs(etaSC)>1.566 && abs(etaSC)<2.5 && pt>10";
+  //TString cuts = "((=isTrue==0 || isTrue==3) && abs(etaSC)>1.566 && abs(etaSC)<2.5 && pt>10";
 
   // Flat cut
   //TString cutHOE = "hOverE < 0.100";
   // Scaled cut
-  // rho 95%-based, E 95%-based
-  //TString cutHOE = "hOverE < 3.91/eSC + 0.0322*rho/eSC + 0.003";
-  // rho 95%-based, E 90%-based
+  // rho 90%-based, E 95%-based
+  TString cutHOE = "hOverE < 3.91/eSC + 0.0368*rho/eSC + 0.002";
+  // rho 90%-based, E 90%-based
   //TString cutHOE = "hOverE < 3.09/eSC + 0.0368*rho/eSC + 0.0165";
-  // rho 95%-based, E mean-based
-  TString cutHOE = "hOverE < 1.64/eSC + 0.0368*rho/eSC + 0.0455";
+  // rho 90%-based, E mean-based
+  //TString cutHOE = "hOverE < 1.63/eSC + 0.0368*rho/eSC + 0.0455";
 
   // Random
   //TString cutHOE = "hOverE < 2.00/eSC + 0.0322*rho/eSC + 0.03";
@@ -32,10 +39,6 @@
 
   TString cutsDen1 = TString::Format("1.0*(%s)",cutsGeneral.Data());
   TString cutsNum1 = TString::Format("1.0*(%s)",cutsWithHOE.Data());
-
-  // Add weight for relative normalization of two flat samples
-  TString cutsDen2 = TString::Format("21.70*(%s)",cutsGeneral.Data());
-  TString cutsNum2 = TString::Format("21.70*(%s)",cutsWithHOE.Data());
 
   // Variable binning
   //  1 - 300 GeV, bins every 2 GeV
@@ -53,12 +56,17 @@
   TH1F *hDen = new TH1F("hDen", "", nbins, xlimits);
   TH1F *hNum = new TH1F("hNum", "", nbins, xlimits);
 
+  printf("Denominator cuts: \n %s\n", cutsDen1.Data());
+  printf("Numirator cuts: \n %s\n", cutsNum1.Data());
+
   gStyle->SetOptStat(0);
   tree1->Draw("pt>>hDen" ,cutsDen1, "");
-  tree2->Draw("pt>>+hDen",cutsDen2, "");
+
+  printf("Bin 10 denominator: %f\n", hDen->GetBinContent(10));
 
   tree1->Draw("pt>>hNum" ,cutsNum1, "");
-  tree2->Draw("pt>>+hNum",cutsNum2, "");
+
+  printf("Bin 10 numerator: %f\n", hNum->GetBinContent(10));
 
   TH1F *hEff = (TH1F*)hNum->Clone("hEff");
   hEff->Divide(hDen);
@@ -66,5 +74,9 @@
   hEff->Draw();
 
   printf("Eff is %f\n", hNum->GetSumOfWeights()/hDen->GetSumOfWeights());
+
+  TFile *fout = new TFile("effPt.root", "recreate");
+  hEff->Write("eff");
+  fout->Close();
 
 }

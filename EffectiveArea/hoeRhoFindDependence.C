@@ -9,14 +9,14 @@
 #include "TLatex.h"
 
 // Constants and settings
-const TString finName    = "hVsRho_EE.root";
+const TString finName    = "hVsRho_EE_DY.root";
 const TString etaLabel   = "Endcap";
 const TString hinName    = "hVsRho";
 const TString xAxisTitle = "rho";
 const TString yAxisTitle = "HCAL energy [GeV]";
 
 // Contours to work with
-const float cutoffFraction = 0.95;
+const float cutoffFraction = 0.90;
 
 // Range of the variable to fit
 const float fitMin = 5;

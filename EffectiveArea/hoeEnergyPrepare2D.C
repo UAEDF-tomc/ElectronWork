@@ -1,13 +1,14 @@
 {
 
-  const TString finName = "/eos/user/i/ikrav/ElectronID/92X/DYJetsToLL_cutID_tuning_92X_v1.root";
+  //const TString finName = "/eos/user/i/ikrav/ElectronID/92X/DYJetsToLL_cutID_tuning_92X_v1.root";
+  const TString finName = "~/DYJetsToLL_cutID_tuning_92X_v1.root";
   const TString treeName = "ntupler/ElectronTree";
 
   TFile *fin = new TFile(finName);
   TTree *tree = (TTree*)fin->Get(treeName);
 
-  TString cuts = "isTrue==1 && abs(etaSC)<1.4442 && pt>10 && hOverE>0";
-  //TString cuts = "isTrue==1 && abs(etaSC)>1.566 && abs(etaSC)<2.5 && pt>10 && hOverE>0";
+  //TString cuts = "isTrue==1 && abs(etaSC)<1.4442 && pt>10 && hOverE>0";
+  TString cuts = "isTrue==1 && abs(etaSC)>1.566 && abs(etaSC)<2.5 && pt>10 && hOverE>0";
   
   const float eMin  = 0;
   const float eMax  = 1000;

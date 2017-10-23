@@ -10,14 +10,15 @@
 #include "TLatex.h"
 
 // Constants and settings
-const TString finName    = "hoeVsE_EE.root";
+const TString finName    = "hoeVsE_EE_DY.root";
 const TString etaLabel   = "Endcap";
 const TString hinName    = "hoeVsE";
 const TString xAxisTitle = "E_{SC}";
 const TString yAxisTitle = "H/E";
 
 // Contours to work with
-const float cutoffFraction = 0.95;
+const bool useCutoff = false; // If false, cutoff fraction is ignored, use mean
+const float cutoffFraction = 0.90;
 
 // Range of the variable to fit
 const float fitMin = 20;
@@ -148,6 +149,8 @@ void hoeEnergyFindDependence(){
   lat1->Draw();
 
   TString fracString = TString::Format("contours at %.0f %%", 100*cutoffFraction);
+  if( !useCutoff )
+    fracString = "markers: mean of H/E in E_{SC} slices";
   TLatex *lat2 = new TLatex(0.15, 0.75, fracString);
   lat2->SetNDC(kTRUE);
   lat2->SetTextSize(0.03);
@@ -272,6 +275,14 @@ void findCutoff(TH1D *hist, float &val, float &valErrPos, float &valErrNeg){
   // If there are very few points, give up
   if( hist->GetEntries() < 10 ) 
     return;
+
+  if( !useCutoff ){
+    // Compute mean-based quantities and return
+    val = hist->GetMean();
+    valErrPos = hist->GetRMS()/hist->GetSumOfWeights();
+    valErrNeg = valErrPos;
+    return;
+  }
 
   int   nbins = hist->GetNbinsX();
   float xlow = hist->GetXaxis()->GetBinLowEdge(1);
