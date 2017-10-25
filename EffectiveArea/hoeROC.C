@@ -15,8 +15,8 @@
 const bool verbose = false;
 const bool smallEventCount = false;
 
-const TString finSigName = "~/DYJetsToLL_cutID_tuning_92X_v1.root";
-const TString finBgName  = "~/TTJets_cutID_92X_v1.root";
+const TString finSigName = "/eos/user/i/ikrav/ElectronID/92X/DYJetsToLL_cutID_tuning_92X_v1.root";
+const TString finBgName  = "/eos/user/i/ikrav/ElectronID/92X/TTJets_cutID_92X_v1.root";
 
 const TString treeName = "ntupler/ElectronTree";
 
@@ -26,11 +26,11 @@ const double ptMax = 1000;
 // Calibrated constants
 bool useScaling = true;
 
-const bool selectBarrel = true;
+const bool selectBarrel = false;
 
 // Barrel constants
-const float constRho = 0.0368;      // 90% contour, barrel, H/E ~= constRho*rho/E
-const float constE   = 1.64;        // mean-based, barrel, H/E ~= constE/E
+// const float constRho = 0.0368;      // 90% contour, barrel, H/E ~= constRho*rho/E
+// const float constE   = 1.64;        // mean-based, barrel, H/E ~= constE/E
 // const float constRho = 0.0368;      // 90% contour, barrel, H/E ~= constRho*rho/E
 // const float constE   = 3.09;        // 90% contour, barrel, H/E ~= constE/E
  // const float constRho = 0.0368;     // 90% contour, barrel, H/E ~= constRho*rho/E
@@ -40,8 +40,12 @@ const float constE   = 1.64;        // mean-based, barrel, H/E ~= constE/E
 // const float constE = 3.91;       // 95% contour, barrel, H/E ~= constE/E
 
 // Endcap constants
-// const float constRho = 0.201;       // 90% contour, endcap, H/E ~= constRho*rho/E
-// const float constE   = 2.65;        // mean-based, endcap, H/E ~= constE/E
+const float constRho = 0.201;       // 90% contour, endcap, H/E ~= constRho*rho/E
+//
+//const float constE   = 2.65;        // mean-based, endcap, H/E ~= constE/E
+//const float constE   = 5.18;        // 90%-based, endcap, H/E ~= constE/E
+const float constE   = 7.01;        // 95%-based, endcap, H/E ~= constE/E
+//
 // const float constRho = 0.237;    // 95% contour, endcap, H/E ~= constRho*rho/E
 // const float constE = 7.01;       // 95% contour, endcap, H/E ~= constE/E
 

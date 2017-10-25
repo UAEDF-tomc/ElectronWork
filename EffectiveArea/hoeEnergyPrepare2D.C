@@ -1,7 +1,7 @@
 {
 
-  //const TString finName = "/eos/user/i/ikrav/ElectronID/92X/DYJetsToLL_cutID_tuning_92X_v1.root";
-  const TString finName = "~/DYJetsToLL_cutID_tuning_92X_v1.root";
+  const TString finName = "/eos/user/i/ikrav/ElectronID/92X/DYJetsToLL_cutID_tuning_92X_v1.root";
+  //const TString finName = "~/DYJetsToLL_cutID_tuning_92X_v1.root";
   const TString treeName = "ntupler/ElectronTree";
 
   TFile *fin = new TFile(finName);

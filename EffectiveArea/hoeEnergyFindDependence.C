@@ -10,15 +10,15 @@
 #include "TLatex.h"
 
 // Constants and settings
-const TString finName    = "hoeVsE_EE_DY.root";
+const TString finName    = "hoeVsE_EE.root";
 const TString etaLabel   = "Endcap";
 const TString hinName    = "hoeVsE";
 const TString xAxisTitle = "E_{SC}";
 const TString yAxisTitle = "H/E";
 
 // Contours to work with
-const bool useCutoff = false; // If false, cutoff fraction is ignored, use mean
-const float cutoffFraction = 0.90;
+const bool useCutoff = true; // If false, cutoff fraction is ignored, use mean
+const float cutoffFraction = 0.95;
 
 // Range of the variable to fit
 const float fitMin = 20;

@@ -1,18 +1,18 @@
 {
 
-  const bool isBarrel = true;
+  const bool isBarrel = false;
   const int nFiles = 4;
   TString fileNamesSig[nFiles] = {
-    "effPt_DY_EB_plain_sig.root",
-    "effPt_DY_EB_95percent_sig.root",
-    "effPt_DY_EB_90percent_sig.root",
-    "effPt_DY_EB_mean_sig.root"
+    "effPt_DY_EE_plain_sig.root",
+    "effPt_DY_EE_95percent_sig.root",
+    "effPt_DY_EE_90percent_sig.root",
+    "effPt_DY_EE_mean_sig.root"
   };
   TString fileNamesBg[nFiles] = {
-    "effPt_DY_EB_plain_bg.root",
-    "effPt_DY_EB_95percent_bg.root",
-    "effPt_DY_EB_90percent_bg.root",
-    "effPt_DY_EB_mean_bg.root"
+    "effPt_DY_EE_plain_bg.root",
+    "effPt_DY_EE_95percent_bg.root",
+    "effPt_DY_EE_90percent_bg.root",
+    "effPt_DY_EE_mean_bg.root"
   };
   
   const int colors[nFiles] = {kBlack, kRed, kBlue, kMagenta};
@@ -100,7 +100,7 @@
     histBg[i]->Draw("L,same");
   }
 
-  TLegend *leg2 = new TLegend(0.2, 0.2, 0.8, 0.4);
+  TLegend *leg2 = new TLegend(0.35, 0.7, 0.95, 0.9);
   leg2->SetBorderSize(0);
   leg2->SetFillStyle(0);
   leg2->AddEntry(histBg[0], "flat H/E cut", "l");
@@ -109,7 +109,7 @@
   leg2->AddEntry(histBg[3], "mean-based scaled H/E cut", "l");
   leg2->Draw();
 
-  TLatex *lat2 = new TLatex(0.2, 0.6, region);
+  TLatex *lat2 = new TLatex(0.15, 0.80, region);
   lat2->SetNDC(kTRUE);
   lat2->Draw();
 

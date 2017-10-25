@@ -1,7 +1,7 @@
 {
 
-  const TString finName1 = "~/DoubleEleFlat1to300_92X_v1.root";
-  const TString finName2 = "~/DoubleEleFlat300to6500_92X_v1.root";
+  const TString finName1 = "/eos/user/i/ikrav/ElectronID/92X/DoubleEleFlat1to300_92X_v1.root";
+  const TString finName2 = "/eos/user/i/ikrav/ElectronID/92X/DoubleEleFlat300to6500_92X_v1.root";
   const TString treeName = "ntupler/ElectronTree";
 
   TFile *fin1 = new TFile(finName1);
@@ -10,18 +10,18 @@
   TFile *fin2 = new TFile(finName2);
   TTree *tree2 = (TTree*)fin2->Get(treeName);
 
-  TString cutsGeneral = "abs(etaSC)<1.4442 && pt>10";
-  //TString cuts = "abs(etaSC)>1.566 && abs(etaSC)<2.5 && pt>10 && hOverE>0";
+  //TString cutsGeneral = "abs(etaSC)<1.4442 && pt>10";
+  TString cutsGeneral = "abs(etaSC)>1.566 && abs(etaSC)<2.5 && pt>10 && hOverE>0";
 
   // Flat cut
   //TString cutHOE = "hOverE < 0.100";
   // Scaled cut
   // rho 95%-based, E 95%-based
-  //TString cutHOE = "hOverE < 3.91/eSC + 0.0322*rho/eSC + 0.003";
+  //TString cutHOE = "hOverE < 7.01/eSC + 0.201*rho/eSC + 0.0155";
   // rho 95%-based, E 90%-based
-  //TString cutHOE = "hOverE < 3.09/eSC + 0.0368*rho/eSC + 0.0165";
+  //TString cutHOE = "hOverE < 5.18/eSC + 0.201*rho/eSC + 0.0275";
   // rho 95%-based, E mean-based
-  TString cutHOE = "hOverE < 1.64/eSC + 0.0368*rho/eSC + 0.0455";
+  TString cutHOE = "hOverE < 2.65/eSC + 0.201*rho/eSC + 0.0465";
 
   // Random
   //TString cutHOE = "hOverE < 2.00/eSC + 0.0322*rho/eSC + 0.03";
@@ -66,5 +66,10 @@
   hEff->Draw();
 
   printf("Eff is %f\n", hNum->GetSumOfWeights()/hDen->GetSumOfWeights());
+
+
+  TFile *fout = new TFile("effPt.root", "recreate");
+  hEff->Write("eff");
+  fout->Close();
 
 }
