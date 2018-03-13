@@ -76,15 +76,11 @@ drawFlatPtEff.C
 Notes on computing the effective areas for cut-based electron ID tuning.
 ======================================================================
 
-=== October 2017 ===
+=== March 2018 ===
 
-   Simply run in ROOT:
+   Simply run:
 
-.L computeEffectiveAreaWithIsoCutoffs.C+
-computeEffectiveAraWithIsoCutoff(EA_NEUTRAL_TOTAL);
-
-This prints out on the screen the constants table that goes
-into the appropriate file in RecoEgamma/ElectronIdentification/data/.....
+./compileAndRun.sh computeEffectiveAreaWithIsoCutoffs
 
 The effective areas are based on 90% contours, like for 
 the 2016 electron ID. One can run this script in "verbose"

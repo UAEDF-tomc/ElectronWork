@@ -19,6 +19,7 @@
 #include "TLegend.h"
 
 #include <vector>
+#include <cassert>
 
 enum EffectiveAreaType {
   EA_UNDEFINED=-1,
@@ -43,7 +44,7 @@ enum MethodType {
 // Signal sample: DYToLL
 const TString fileNameSignal = 
   // "/afs/cern.ch/user/i/ikrav/workspace/ntuples/Spring16/DYJetsToLL_madgraph_80X.root";
-  "/eos/user/i/ikrav/ElectronID/92X/DYJetsToLL_cutID_tuning_92X_v1.root";
+  "/user/tomc/eleIdTuning/tuples/DYJetsToLL_cutID_tuning_94X_v1.root";
 // Directory and tree name:
 const TString treeName = "ntupler/ElectronTree";
 
@@ -88,9 +89,9 @@ EffectiveAreaType eaTypeGlobal = EA_UNDEFINED;
 void drawIsoVsRho(int etaBin, TH2F *hist);
 void computeCutoff(TH1D *hist, float &total, float &cutoff);
 void computeCutoffAndErrorMethodToy(TH1D *hist, float &cutoff, float &cutoffErrPlus, 
-			      float &cutoffErrMinus, TCanvas *canv);
+                              float &cutoffErrMinus, TCanvas *canv);
 void computeCutoffAndErrorMethodEff(TH1D *hist, float &cutoff, float &cutoffErrPlus,
-			      float &cutoffErrMinus, TCanvas *canv);
+                              float &cutoffErrMinus, TCanvas *canv);
 void interpolate( float x1, float x2, float y1, float y2, float &x, float y);
 void drawCutoffsAndFit(int etaBin, TH1F *hist, TGraphAsymmErrors *graph, float &a, float &b, float &bErr);
 
@@ -122,8 +123,8 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
   for(int i=0; i<nEtaBins; i++){
     TString hName = hNameBase + TString::Format("_%d",i);
     hIsoPhoNhVsRho[i] = new TH2F(hName,"",
-				 rhoBinsPlots, rhoMinPlots, rhoMaxPlots, 
-				 isoBinsPlots, isoMinPlots, isoMaxPlots);
+                                 rhoBinsPlots, rhoMinPlots, rhoMaxPlots, 
+                                 isoBinsPlots, isoMinPlots, isoMaxPlots);
     hIsoPhoNhVsRho[i]->GetXaxis()->SetTitle("rho");
     hIsoPhoNhVsRho[i]->GetYaxis()->SetTitle("ISO_{pho}+ISO_{neu.had.}");
 
@@ -140,7 +141,7 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
   TFile *fileSignal     = new TFile(fileNameSignal);
   if( !fileSignal ){
     printf("Failed to open the input files, check\n   %s\n", 
-	   fileNameSignal.Data());
+           fileNameSignal.Data());
     assert(0);
   }
   TTree *treeSignal     = (TTree*)fileSignal->Get(treeName);
@@ -196,7 +197,7 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
   treeSignal->SetBranchAddress("isoPhotons",        &isoPhotons,        &b_isoPhotons);
   treeSignal->SetBranchAddress("isTrue",    &isTrue,    &b_isTrue);
   treeSignal->SetBranchAddress("passConversionVeto",       &elePassConversionVeto,
-			       &b_elePassConversionVeto);
+                               &b_elePassConversionVeto);
 
 
   // 
@@ -207,7 +208,7 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
     maxEvents = 2000000;
   if(verbose)
     printf("Start loop over events, total events = %lld\n", 
-	   treeSignal->GetEntries() );
+           treeSignal->GetEntries() );
   for(UInt_t ievent = 0; ievent < maxEvents; ievent++){
 
     if( ievent%100000 == 0){
@@ -237,7 +238,7 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
 
       // Check kinematics:
       if( !(elePt->at(iele) > ptCut) )
-	continue;
+        continue;
 
       // Check truth match
       if( isTrue->at(iele) != 1 ) continue;
@@ -246,27 +247,27 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
       if( abs(eleEtaSC->at(iele))>etaBinLimits[nEtaBins] ) continue;
       int ieta = 0; 
       while ( ieta < nEtaBins-1 
-	      && abs(eleEtaSC->at(iele)) > etaBinLimits[ieta+1] )
-	{ ++ieta; };
+              && abs(eleEtaSC->at(iele)) > etaBinLimits[ieta+1] )
+        { ++ieta; };
 
       // Look up the isolation type we need
       double iso = 0;
       if( eaType == EA_CHARGED ){
-	iso = isoChargedHadrons->at(iele);
+        iso = isoChargedHadrons->at(iele);
       }else if ( eaType == EA_PHOTON ) {
-	iso = isoPhotons->at(iele);
+        iso = isoPhotons->at(iele);
       }else if ( eaType == EA_NEUTRAL_HADRON ) {
-	iso = isoNeutralHadrons->at(iele);
+        iso = isoNeutralHadrons->at(iele);
       }else if ( eaType == EA_NEUTRAL_TOTAL ) {
-	iso = isoNeutralHadrons->at(iele) + isoPhotons->at(iele);
+        iso = isoNeutralHadrons->at(iele) + isoPhotons->at(iele);
       }else{
-	printf("Unknown isolation type requested, exiting.\n");
-	assert(0);
+        printf("Unknown isolation type requested, exiting.\n");
+        assert(0);
       }
       
       //if( iso>0 ){ // DEBUG
-	hIsoPhoNhVsRho[ieta]->Fill( rho, iso);
-	//}
+        hIsoPhoNhVsRho[ieta]->Fill( rho, iso);
+        //}
 
     } // end loop over the electrons
 
@@ -286,17 +287,17 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
       TH1D *hSlice =  hIsoPhoNhVsRho[ieta]->ProjectionY("_py",iRho, iRho);
       hSlice->Rebin(5);
       if( method == METHOD_TOY_MC ){
-	// Method with errors on the cutoff based on a toy ensemble
-	computeCutoffAndErrorMethodToy(hSlice, cutoff, cutoffErrPlus, cutoffErrMinus, canv);
+        // Method with errors on the cutoff based on a toy ensemble
+        computeCutoffAndErrorMethodToy(hSlice, cutoff, cutoffErrPlus, cutoffErrMinus, canv);
       }else if( method == METHOD_EFF_CURVE ){
-	// Method with errors on the cutoff based on the efficiency curve analysis
-	computeCutoffAndErrorMethodEff(hSlice, cutoff, cutoffErrPlus, cutoffErrMinus, canv);
+        // Method with errors on the cutoff based on the efficiency curve analysis
+        computeCutoffAndErrorMethodEff(hSlice, cutoff, cutoffErrPlus, cutoffErrMinus, canv);
       }else{
-	printf("Unknown method, crashing\n");
-	assert(0);
+        printf("Unknown method, crashing\n");
+        assert(0);
       }
       hCutoffs[ieta]->SetBinContent(iRho, cutoff);
-      hCutoffs[ieta]->SetBinError(iRho, min(cutoffErrPlus, cutoffErrMinus));
+      hCutoffs[ieta]->SetBinError(iRho, std::min(cutoffErrPlus, cutoffErrMinus));
       float x = hCutoffs[ieta]->GetBinCenter(iRho);
       float dx = 0.5 * hCutoffs[ieta]->GetBinWidth(iRho);
       hCutoffsGraph[ieta]->SetPoint(iRho, x, cutoff);
@@ -330,16 +331,18 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
   printf("%s", singleLineB.Data());
 
   // Print the effective area constants in CMSSW-like format
-  printf("\nCMSSW-like printout of the effective areas\n");
-  printf("# |eta| min   |eta| max   effective area    error\n");
+  FILE *f = fopen("figures/" +  eaTypeString[eaTypeGlobal] + "/effAreas.txt", "w");
+  fprintf(f,"\nCMSSW-like printout of the effective areas\n");
+  fprintf(f,"# |eta| min   |eta| max   effective area    error\n");
   for(int ieta = 0; ieta<nEtaBins; ieta++){
-    printf("%10.3f   %10.3f   %10.4f   %10.4f\n", 
-	   etaBinLimits[ieta], etaBinLimits[ieta+1],
-	   B[ieta], BErr[ieta]);
+    fprintf(f,"%10.3f   %10.3f   %10.4f   %10.4f\n", 
+           etaBinLimits[ieta], etaBinLimits[ieta+1],
+           B[ieta], BErr[ieta]);
   }
-  printf("\n");
+  fprintf(f,"\n");
+  fclose(f);
 
-  TFile *fout = new TFile("cutoffs.root","recreate");
+  TFile *fout = new TFile("figures/" +  eaTypeString[eaTypeGlobal] + "/cutoffs.root","recreate");
   fout->cd();
   for(int ieta=0; ieta<nEtaBins; ieta++){
     hCutoffs[ieta]->Write();
@@ -393,7 +396,7 @@ void computeCutoff(TH1D *hist, float &total, float &cutoff){
 }
 
 void computeCutoffAndErrorMethodToy(TH1D *hist, float &cutoff, float &cutoffErrPlus, 
-				    float &cutoffErrMinus, TCanvas *canv){
+                                    float &cutoffErrMinus, TCanvas *canv){
 
 
   float total = 0;
@@ -421,13 +424,13 @@ void computeCutoffAndErrorMethodToy(TH1D *hist, float &cutoff, float &cutoffErrP
     hist->Fit("isofunc","R");
     
     isofunc->SetRange( hist->GetXaxis()->GetBinLowEdge(1), 100);
-		       // hist->GetXaxis()->GetBinUpEdge(hist->GetNbinsX()));
+                       // hist->GetXaxis()->GetBinUpEdge(hist->GetNbinsX()));
 
     const int nPseudoExp = 10;
     // Create a histogram to hold pseudo eperiments so that it contains the long tail
     TH1D *tmpExperimentHist = new TH1D("tmpExperimentHist","",
-				       10000, hist->GetXaxis()->GetBinLowEdge(1),
-				       100);
+                                       10000, hist->GetXaxis()->GetBinLowEdge(1),
+                                       100);
     // TH1D *tmpExperimentHist = (TH1D*)hist->Clone("tmpExperimentHist");
     TH1D *tmpCutoffHist = (TH1D*)hist->Clone("tmpCutoffHist");
     tmpCutoffHist->Reset();
@@ -463,7 +466,7 @@ void computeCutoffAndErrorMethodToy(TH1D *hist, float &cutoff, float &cutoffErrP
 }
 
 void computeCutoffAndErrorMethodEff(TH1D *hist, float &cutoff, float &cutoffErrPlus,
-				    float &cutoffErrMinus, TCanvas *canv){
+                                    float &cutoffErrMinus, TCanvas *canv){
 
   int   nbins = hist->GetNbinsX();
   float xlow = hist->GetXaxis()->GetBinLowEdge(1);
@@ -532,7 +535,7 @@ void computeCutoffAndErrorMethodEff(TH1D *hist, float &cutoff, float &cutoffErrP
       // Found the first efficiency value above threshold
       // Interpolate and find the cutoff value 
       interpolate( xArray[i-1], xArray[i], effArray[i-1],effArray[i],
-		   cutoff, cutoffFraction);
+                   cutoff, cutoffFraction);
       break;
     }
   }
@@ -542,9 +545,9 @@ void computeCutoffAndErrorMethodEff(TH1D *hist, float &cutoff, float &cutoffErrP
       // Found the first efficiency value above threshold
       // Interpolate and find the cutoff value
       interpolate( xArray[i-1], xArray[i], 
-		   effArray[i-1] + effErrArray[i-1],
-		   effArray[i] + effErrArray[i],
-		   cutoffLow, cutoffFraction);
+                   effArray[i-1] + effErrArray[i-1],
+                   effArray[i] + effErrArray[i],
+                   cutoffLow, cutoffFraction);
       break;
     }
   }
@@ -554,9 +557,9 @@ void computeCutoffAndErrorMethodEff(TH1D *hist, float &cutoff, float &cutoffErrP
       // Found the first efficiency value above threshold
       // Interpolate and find the cutoff value
       interpolate( xArray[i-1], xArray[i], 
-		   effArray[i-1] - effErrArray[i-1],
-		   effArray[i] - effErrArray[i],
-		   cutoffHigh, cutoffFraction);
+                   effArray[i-1] - effErrArray[i-1],
+                   effArray[i] - effErrArray[i],
+                   cutoffHigh, cutoffFraction);
       break;
     }
   }
@@ -565,8 +568,8 @@ void computeCutoffAndErrorMethodEff(TH1D *hist, float &cutoff, float &cutoffErrP
 
 
   printf("Method eff curve: Cutoff is at %f + %f - %f\n", cutoff, 
-	 cutoffErrPlus,
-	 cutoffErrMinus);
+         cutoffErrPlus,
+         cutoffErrMinus);
 
 
   //
@@ -608,7 +611,7 @@ void interpolate( float x1, float x2, float y1, float y2, float &x, float y){
 }
 
 void drawCutoffsAndFit(int etaBin, TH1F *hist, TGraphAsymmErrors *graph, float &a, 
-		       float &b, float &bErr){
+                       float &b, float &bErr){
 
   printf("Start fitting\n");
 
@@ -637,9 +640,9 @@ void drawCutoffsAndFit(int etaBin, TH1F *hist, TGraphAsymmErrors *graph, float &
   bErr = func->GetParError(1);
   
   c1->Update();
-  TString cFileName = TString("figures/") + canvasName + TString(".png");
+  TString cFileName = TString("figures/" +  eaTypeString[eaTypeGlobal] + "/") + canvasName + TString(".png");
   c1->Print(cFileName);
-		      
+                      
   return;
 }
 
@@ -671,3 +674,11 @@ Double_t isoShape(Double_t *x, Double_t *par)
   return result;
 }
 
+// Compiled
+int main(int argc, char *argv[]){
+  gROOT->SetBatch();
+  computeEffectiveAraWithIsoCutoffs(EA_CHARGED);
+  computeEffectiveAraWithIsoCutoffs(EA_PHOTON);
+  computeEffectiveAraWithIsoCutoffs(EA_NEUTRAL_HADRON);
+  computeEffectiveAraWithIsoCutoffs(EA_NEUTRAL_TOTAL);
+}
