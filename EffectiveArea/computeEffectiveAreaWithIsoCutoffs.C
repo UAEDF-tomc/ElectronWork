@@ -20,6 +20,8 @@
 
 #include <vector>
 #include <cassert>
+#include <stdio.h>
+#include <stdlib.h>
 
 enum EffectiveAreaType {
   EA_UNDEFINED=-1,
@@ -103,7 +105,7 @@ Double_t isoShape(Double_t *x, Double_t *par);
 //
 
 void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOTAL){
-
+  system("mkdir -p effAreas/" +  eaTypeString[eaTypeGlobal] + "/");
   eaTypeGlobal = eaType;
 
   // This statement below should not be needed, but in one particular node I had to
@@ -331,7 +333,7 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
   printf("%s", singleLineB.Data());
 
   // Print the effective area constants in CMSSW-like format
-  FILE *f = fopen("figures/" +  eaTypeString[eaTypeGlobal] + "/effAreas.txt", "w");
+  FILE *f = fopen("effAreas/" +  eaTypeString[eaTypeGlobal] + "/effAreas.txt", "w");
   fprintf(f,"\nCMSSW-like printout of the effective areas\n");
   fprintf(f,"# |eta| min   |eta| max   effective area    error\n");
   for(int ieta = 0; ieta<nEtaBins; ieta++){
@@ -342,7 +344,7 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
   fprintf(f,"\n");
   fclose(f);
 
-  TFile *fout = new TFile("figures/" +  eaTypeString[eaTypeGlobal] + "/cutoffs.root","recreate");
+  TFile *fout = new TFile("effAreas/" +  eaTypeString[eaTypeGlobal] + "/cutoffs.root","recreate");
   fout->cd();
   for(int ieta=0; ieta<nEtaBins; ieta++){
     hCutoffs[ieta]->Write();
@@ -640,7 +642,7 @@ void drawCutoffsAndFit(int etaBin, TH1F *hist, TGraphAsymmErrors *graph, float &
   bErr = func->GetParError(1);
   
   c1->Update();
-  TString cFileName = TString("figures/" +  eaTypeString[eaTypeGlobal] + "/") + canvasName + TString(".png");
+  TString cFileName = TString("effAreas/" +  eaTypeString[eaTypeGlobal] + "/") + canvasName + TString(".png");
   c1->Print(cFileName);
                       
   return;
