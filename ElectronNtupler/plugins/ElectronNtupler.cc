@@ -321,7 +321,7 @@ ElectronNtupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     // pre-72X method below is commented out
     //expectedMissingInnerHits_ = el.gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
     // since 72X, the access of missing hits is this:
-    expectedMissingInnerHits_ = el.gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS);
+    expectedMissingInnerHits_ = el.gsfTrack()->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS);
     passConversionVeto_ = el.passConversionVeto();
     
     // Match to generator level truth

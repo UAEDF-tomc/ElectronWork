@@ -341,7 +341,7 @@ ElectronNtuplerEventStructure::analyze(const edm::Event& iEvent, const edm::Even
      //  expectedMissingInnerHits_.push_back( el.gsfTrack()->trackerExpectedHitsInner().numberOfLostHits() );
      // since 72X, the access of missing hits is this:
      expectedMissingInnerHits_.push_back(el.gsfTrack()->hitPattern()
-					 .numberOfHits(reco::HitPattern::MISSING_INNER_HITS) );
+					 .numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS) );
      passConversionVeto_.push_back( el.passConversionVeto() );
      
      // Match to generator level truth
