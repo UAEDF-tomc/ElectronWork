@@ -36,6 +36,13 @@ const TString eaTypeString[4] = {
   "neutral hadron",
   "neutral hadron and photon"};
 
+const TString eaTypeDir[4] = {
+  "chargedHadron",
+  "photon",
+  "neutralHadron",
+  "neutralHadronAndPhoton"};
+
+
 enum MethodType {
   METHOD_UNDEFINED = -1,
   METHOD_TOY_MC,
@@ -105,8 +112,8 @@ Double_t isoShape(Double_t *x, Double_t *par);
 //
 
 void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOTAL){
-  system("mkdir -p effAreas/" +  eaTypeString[eaTypeGlobal] + "/");
   eaTypeGlobal = eaType;
+  system("mkdir -p effAreas/" +  eaTypeDir[eaTypeGlobal] + "/");
 
   // This statement below should not be needed, but in one particular node I had to
   // add it, somehow the vector header was not loaded automatically there.
@@ -248,21 +255,15 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
       // Find eta bin
       if( abs(eleEtaSC->at(iele))>etaBinLimits[nEtaBins] ) continue;
       int ieta = 0; 
-      while ( ieta < nEtaBins-1 
-              && abs(eleEtaSC->at(iele)) > etaBinLimits[ieta+1] )
-        { ++ieta; };
+      while(ieta < nEtaBins-1 and abs(eleEtaSC->at(iele)) > etaBinLimits[ieta+1]) ++ieta;
 
       // Look up the isolation type we need
       double iso = 0;
-      if( eaType == EA_CHARGED ){
-        iso = isoChargedHadrons->at(iele);
-      }else if ( eaType == EA_PHOTON ) {
-        iso = isoPhotons->at(iele);
-      }else if ( eaType == EA_NEUTRAL_HADRON ) {
-        iso = isoNeutralHadrons->at(iele);
-      }else if ( eaType == EA_NEUTRAL_TOTAL ) {
-        iso = isoNeutralHadrons->at(iele) + isoPhotons->at(iele);
-      }else{
+      if(eaType == EA_CHARGED)              iso = isoChargedHadrons->at(iele);
+      else if (eaType == EA_PHOTON)         iso = isoPhotons->at(iele);
+      else if (eaType == EA_NEUTRAL_HADRON) iso = isoNeutralHadrons->at(iele);
+      else if (eaType == EA_NEUTRAL_TOTAL)  iso = isoNeutralHadrons->at(iele) + isoPhotons->at(iele);
+      else {
         printf("Unknown isolation type requested, exiting.\n");
         assert(0);
       }
@@ -333,7 +334,7 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
   printf("%s", singleLineB.Data());
 
   // Print the effective area constants in CMSSW-like format
-  FILE *f = fopen("effAreas/" +  eaTypeString[eaTypeGlobal] + "/effAreas.txt", "w");
+  FILE *f = fopen("effAreas/" +  eaTypeDir[eaTypeGlobal] + "/effAreas.txt", "w");
   fprintf(f,"\nCMSSW-like printout of the effective areas\n");
   fprintf(f,"# |eta| min   |eta| max   effective area    error\n");
   for(int ieta = 0; ieta<nEtaBins; ieta++){
@@ -344,7 +345,7 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
   fprintf(f,"\n");
   fclose(f);
 
-  TFile *fout = new TFile("effAreas/" +  eaTypeString[eaTypeGlobal] + "/cutoffs.root","recreate");
+  TFile *fout = new TFile("effAreas/" +  eaTypeDir[eaTypeGlobal] + "/cutoffs.root","recreate");
   fout->cd();
   for(int ieta=0; ieta<nEtaBins; ieta++){
     hCutoffs[ieta]->Write();
@@ -642,7 +643,7 @@ void drawCutoffsAndFit(int etaBin, TH1F *hist, TGraphAsymmErrors *graph, float &
   bErr = func->GetParError(1);
   
   c1->Update();
-  TString cFileName = TString("effAreas/" +  eaTypeString[eaTypeGlobal] + "/") + canvasName + TString(".png");
+  TString cFileName = TString("effAreas/" +  eaTypeDir[eaTypeGlobal] + "/") + canvasName + TString(".png");
   c1->Print(cFileName);
                       
   return;
