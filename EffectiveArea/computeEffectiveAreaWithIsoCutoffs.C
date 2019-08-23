@@ -42,20 +42,13 @@ const TString eaTypeDir[4] = {
   "neutralHadron",
   "neutralHadronAndPhoton"};
 
-
 enum MethodType {
   METHOD_UNDEFINED = -1,
   METHOD_TOY_MC,
   METHOD_EFF_CURVE};
 
-
-//
-// Signal sample: DYToLL
-const TString fileNameSignal = 
-  // "/afs/cern.ch/user/i/ikrav/workspace/ntuples/Spring16/DYJetsToLL_madgraph_80X.root";
-  "/user/tomc/eleIdTuning/tuples/DYJetsToLL_cutID_tuning_94X_v1.root";
-// Directory and tree name:
-const TString treeName = "ntupler/ElectronTree";
+const TString fileNameSignal = "/user/tomc/eleIdTuning/tuples/DY.root";
+const TString treeName       = "ntupler/ElectronTree";
 
 const bool verbose = false;
 const bool smallEventCount = false; // DEBUG
@@ -67,26 +60,22 @@ const MethodType method = METHOD_EFF_CURVE;
 // Selection cuts
 // Kinematics
 const float ptCut = 20; 
-
 const float cutoffFraction = 0.90;
 
 const int nEtaBins = 7;
-// const float etaBinLimits[nEtaBins+1] = {0.0, 0.8, 1.3, 2.0, 2.2, 2.5};
-//const float etaBinLimits[nEtaBins+1] = {0.0, 1.0, 1.479, 2.0, 2.2, 2.5};
-const float etaBinLimits[nEtaBins+1] = 
-  {0.0, 1.0, 1.479, 2.0, 2.2, 2.3, 2.4, 2.5};
+const float etaBinLimits[nEtaBins+1] = {0.0, 1.0, 1.479, 2.0, 2.2, 2.3, 2.4, 2.5};
 
-const int rhoBinsPlots  = 50;
+const int rhoBinsPlots  = 65;
 const float rhoMinPlots = 0;
-const float rhoMaxPlots = 50;
+const float rhoMaxPlots = 65;
 
 const int isoBinsPlots  = 1100;
 const float isoMinPlots = -1;
 const float isoMaxPlots = 10;
 
 // Limit the fit range to avoid low statistics edge effects
-const float rhoMinFit   = 5;
-const float rhoMaxFit   = 35;
+const float rhoMinFit   = 20;
+const float rhoMaxFit   = 50;
 
 // Global variables
 TH2F *dummy; // A histogram for drawing graphs on top of it
@@ -97,10 +86,8 @@ EffectiveAreaType eaTypeGlobal = EA_UNDEFINED;
 //
 void drawIsoVsRho(int etaBin, TH2F *hist);
 void computeCutoff(TH1D *hist, float &total, float &cutoff);
-void computeCutoffAndErrorMethodToy(TH1D *hist, float &cutoff, float &cutoffErrPlus, 
-                              float &cutoffErrMinus, TCanvas *canv);
-void computeCutoffAndErrorMethodEff(TH1D *hist, float &cutoff, float &cutoffErrPlus,
-                              float &cutoffErrMinus, TCanvas *canv);
+void computeCutoffAndErrorMethodToy(TH1D *hist, float &cutoff, float &cutoffErrPlus, float &cutoffErrMinus, TCanvas *canv);
+void computeCutoffAndErrorMethodEff(TH1D *hist, float &cutoff, float &cutoffErrPlus, float &cutoffErrMinus, TCanvas *canv);
 void interpolate( float x1, float x2, float y1, float y2, float &x, float y);
 void drawCutoffsAndFit(int etaBin, TH1F *hist, TGraphAsymmErrors *graph, float &a, float &b, float &bErr);
 
@@ -147,13 +134,14 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
   //
   // Open a file and find the tree with electron data
   //
-  TFile *fileSignal     = new TFile(fileNameSignal);
+  TFile *fileSignal = new TFile(fileNameSignal);
   if( !fileSignal ){
     printf("Failed to open the input files, check\n   %s\n", 
            fileNameSignal.Data());
     assert(0);
   }
-  TTree *treeSignal     = (TTree*)fileSignal->Get(treeName);
+
+  TTree *treeSignal = (TTree*)fileSignal->Get(treeName);
   if( !treeSignal ){
     printf("Failed to find the tree %s\n", treeName.Data() );
     assert(0);
@@ -196,39 +184,33 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
 
 
   // Connect variables and branches to the tree with the data
-  treeSignal->SetBranchAddress("nEle", &nEle, &b_nEle);
-  treeSignal->SetBranchAddress("rho", &rho, &b_rho);
-  treeSignal->SetBranchAddress("pt", &elePt, &b_elePt);
-  treeSignal->SetBranchAddress("etaSC", &eleEtaSC, &b_eleEtaSC);
-  treeSignal->SetBranchAddress("phiSC", &elePhiSC, &b_elePhiSC);
-  treeSignal->SetBranchAddress("isoChargedHadrons", &isoChargedHadrons, &b_isoChargedHadrons);
-  treeSignal->SetBranchAddress("isoNeutralHadrons", &isoNeutralHadrons, &b_isoNeutralHadrons);
-  treeSignal->SetBranchAddress("isoPhotons",        &isoPhotons,        &b_isoPhotons);
-  treeSignal->SetBranchAddress("isTrue",    &isTrue,    &b_isTrue);
-  treeSignal->SetBranchAddress("passConversionVeto",       &elePassConversionVeto,
-                               &b_elePassConversionVeto);
+  treeSignal->SetBranchAddress("nEle",               &nEle,                  &b_nEle);
+  treeSignal->SetBranchAddress("rho",                &rho,                   &b_rho);
+  treeSignal->SetBranchAddress("pt",                 &elePt,                 &b_elePt);
+  treeSignal->SetBranchAddress("etaSC",              &eleEtaSC,              &b_eleEtaSC);
+  treeSignal->SetBranchAddress("phiSC",              &elePhiSC,              &b_elePhiSC);
+  treeSignal->SetBranchAddress("isoChargedHadrons",  &isoChargedHadrons,     &b_isoChargedHadrons);
+  treeSignal->SetBranchAddress("isoNeutralHadrons",  &isoNeutralHadrons,     &b_isoNeutralHadrons);
+  treeSignal->SetBranchAddress("isoPhotons",         &isoPhotons,            &b_isoPhotons);
+  treeSignal->SetBranchAddress("isTrue",             &isTrue,                &b_isTrue);
+  treeSignal->SetBranchAddress("passConversionVeto", &elePassConversionVeto, &b_elePassConversionVeto);
 
 
   // 
   // Loop over events
   //
   UInt_t maxEvents = treeSignal->GetEntries();
-  if( smallEventCount )
-    maxEvents = 2000000;
-  if(verbose)
-    printf("Start loop over events, total events = %lld\n", 
-           treeSignal->GetEntries() );
+  if(smallEventCount) maxEvents = 2000000;
+  if(verbose)         printf("Start loop over events, total events = %lld\n", treeSignal->GetEntries());
+
   for(UInt_t ievent = 0; ievent < maxEvents; ievent++){
 
-    if( ievent%100000 == 0){
-      printf("."); fflush(stdout);
-    }
+    if(ievent%100000 == 0){ printf("."); fflush(stdout);}
     Long64_t tentry = treeSignal->LoadTree(ievent);
     
     // Load the value of the number of the electrons in the event    
     b_nEle->GetEntry(tentry);
-    if(verbose)
-      printf("Event %d, number of electrons %u\n", ievent, nEle);
+    if(verbose) printf("Event %d, number of electrons %u\n", ievent, nEle);
     
     // Get data for all electrons in this event, only vars of interest
     b_rho->GetEntry(tentry);
@@ -246,16 +228,15 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
     for(int iele = 0; iele < nEle; iele++){
 
       // Check kinematics:
-      if( !(elePt->at(iele) > ptCut) )
-        continue;
+      if(!(elePt->at(iele) > ptCut)) continue;
 
       // Check truth match
-      if( isTrue->at(iele) != 1 ) continue;
+      if(isTrue->at(iele) != 1) continue;
 
       // Find eta bin
       if( abs(eleEtaSC->at(iele))>etaBinLimits[nEtaBins] ) continue;
       int ieta = 0; 
-      while(ieta < nEtaBins-1 and abs(eleEtaSC->at(iele)) > etaBinLimits[ieta+1]) ++ieta;
+      while(ieta < nEtaBins-1 and fabs(eleEtaSC->at(iele)) > etaBinLimits[ieta+1]) ++ieta;
 
       // Look up the isolation type we need
       double iso = 0;
@@ -268,12 +249,9 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
         assert(0);
       }
       
-      //if( iso>0 ){ // DEBUG
-        hIsoPhoNhVsRho[ieta]->Fill( rho, iso);
-        //}
+      hIsoPhoNhVsRho[ieta]->Fill( rho, iso);
 
     } // end loop over the electrons
-
   } // end loop over events
   printf("\n");
 
@@ -289,13 +267,9 @@ void computeEffectiveAraWithIsoCutoffs(EffectiveAreaType eaType = EA_NEUTRAL_TOT
       // Create a rho slice for the 2D histogram of the given eta bin
       TH1D *hSlice =  hIsoPhoNhVsRho[ieta]->ProjectionY("_py",iRho, iRho);
       hSlice->Rebin(5);
-      if( method == METHOD_TOY_MC ){
-        // Method with errors on the cutoff based on a toy ensemble
-        computeCutoffAndErrorMethodToy(hSlice, cutoff, cutoffErrPlus, cutoffErrMinus, canv);
-      }else if( method == METHOD_EFF_CURVE ){
-        // Method with errors on the cutoff based on the efficiency curve analysis
-        computeCutoffAndErrorMethodEff(hSlice, cutoff, cutoffErrPlus, cutoffErrMinus, canv);
-      }else{
+      if(method == METHOD_TOY_MC)         computeCutoffAndErrorMethodToy(hSlice, cutoff, cutoffErrPlus, cutoffErrMinus, canv);  // Method with errors on the cutoff based on a toy ensemble
+      else if(method == METHOD_EFF_CURVE) computeCutoffAndErrorMethodEff(hSlice, cutoff, cutoffErrPlus, cutoffErrMinus, canv);  // Method with errors on the cutoff based on the efficiency curve analysis
+      else {
         printf("Unknown method, crashing\n");
         assert(0);
       }
@@ -387,21 +361,14 @@ void computeCutoff(TH1D *hist, float &total, float &cutoff){
   float count = 0;
   for(int iIso = 1; iIso<= histBins+1; iIso++){ // Includes overflows!
     count += hist->GetBinContent(iIso);
-    if(count < maxCount ){
-      cutoff =  hist->GetXaxis()->GetBinUpEdge(iIso);
-      // printf("   x= %f   count= %f   maxcount= %f\n", cutoff, count, maxCount);
-    }else{
-      // printf("   bailing out on i= %d \n", iIso);
-      break;
-    }
+    if(count < maxCount) cutoff =  hist->GetXaxis()->GetBinUpEdge(iIso);
+    else break;
   }
   return;
 }
 
 void computeCutoffAndErrorMethodToy(TH1D *hist, float &cutoff, float &cutoffErrPlus, 
                                     float &cutoffErrMinus, TCanvas *canv){
-
-
   float total = 0;
   computeCutoff(hist, total, cutoff);
   
@@ -427,26 +394,21 @@ void computeCutoffAndErrorMethodToy(TH1D *hist, float &cutoff, float &cutoffErrP
     hist->Fit("isofunc","R");
     
     isofunc->SetRange( hist->GetXaxis()->GetBinLowEdge(1), 100);
-                       // hist->GetXaxis()->GetBinUpEdge(hist->GetNbinsX()));
 
     const int nPseudoExp = 10;
     // Create a histogram to hold pseudo eperiments so that it contains the long tail
     TH1D *tmpExperimentHist = new TH1D("tmpExperimentHist","",
                                        10000, hist->GetXaxis()->GetBinLowEdge(1),
                                        100);
-    // TH1D *tmpExperimentHist = (TH1D*)hist->Clone("tmpExperimentHist");
     TH1D *tmpCutoffHist = (TH1D*)hist->Clone("tmpCutoffHist");
     tmpCutoffHist->Reset();
     float tmpTotal, tmpCutoff;
     for(int iexp = 0; iexp < nPseudoExp; iexp++){
       tmpExperimentHist->Reset();
       tmpExperimentHist->FillRandom("isofunc", hist->GetSumOfWeights() );
-      // tmpExperimentHist->Print("all");
       computeCutoff( tmpExperimentHist, tmpTotal, tmpCutoff );
       tmpCutoffHist->Fill( tmpCutoff );
-      // printf("pseudo %3d   cutpff= %f\n", iexp, tmpCutoff);
     }
-    // tmpCutoffHist->Print();
     cutoffErr = tmpCutoffHist->GetRMS();
     if( cutoffErr == 0 )
       cutoffErr = largeCutoffError;
@@ -464,8 +426,6 @@ void computeCutoffAndErrorMethodToy(TH1D *hist, float &cutoff, float &cutoffErrP
   hist->SetMarkerSize(1);
   hist->Draw("pe");
   canv->Update();
-  // float xxx;
-  // cin >> xxx;
 }
 
 void computeCutoffAndErrorMethodEff(TH1D *hist, float &cutoff, float &cutoffErrPlus,
@@ -625,7 +585,7 @@ void drawCutoffsAndFit(int etaBin, TH1F *hist, TGraphAsymmErrors *graph, float &
   c1->cd();
   hist->SetMarkerStyle(20);
   hist->SetMarkerSize(1);
-  hist->GetYaxis()->SetRangeUser(-1,10);
+  hist->GetYaxis()->SetRangeUser(-1,15);
   TString yaxisTitle = eaTypeString[eaTypeGlobal] + TString(" isolation");
   hist->GetXaxis()->SetTitle("rho");
   hist->GetYaxis()->SetTitle(yaxisTitle);
